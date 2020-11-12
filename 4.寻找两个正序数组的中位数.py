@@ -53,18 +53,11 @@ class Solution(object):
         #     # 前两种情况都不需要排序，第三种情况需要对数列进行排序处理
         for i in range(train_itera-1):
             if nums1 and nums2:
-                if nums1[0] < nums2[0]:
-                    ans = nums1[0]
-                    nums1.pop(0)
-                else:
-                    ans = nums2[0]
-                    nums2.pop(0)
+                ans = nums1.pop(0) if nums1[0]<nums2[0] else nums2.pop(0)
             elif nums1:
-                ans = nums1[0]
-                nums1.pop(0)
+                ans = nums1.pop(0)
             else:
-                ans = nums2[0]
-                nums2.pop(0)
+                ans = nums2.pop(0)
         
         if total % 2 != 0:
             try:
