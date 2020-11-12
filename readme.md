@@ -10,7 +10,7 @@ Use as a personal private notebook
 
 这个repo用来存储Leetcode的训练代码和相关笔记,仅作为个人的私有笔记本使用。
 
-以python为主，有空的话可以尝试拓展c++
+以python为主，尝试拓展c++
 
 ## Basic Info
 

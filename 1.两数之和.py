@@ -24,7 +24,8 @@ class Solution(object):
             return[j,i]
 
         '''Version 2 to pay attention to :hash-related '''
-        # NOTE:参考参考答案中的哈希方法
+        # TODO:参考参考答案中的哈希方法同时学习一下
+
 
 
 # @lc code=end
