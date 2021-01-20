@@ -16,15 +16,12 @@ class Solution(object):
         """
         boundary = [0,0]
         for i,v in enumerate(p):
-            
+            pass
+        
 """
 class Solution(object):
     def isMatch(self, s, p):
-"""
-        #:type s: str
-        #:type p: str
-        #:rtype: bool
-"""
+
         # 三种情况：basic，.,*
         s = list(s)
         extra_index = 0 

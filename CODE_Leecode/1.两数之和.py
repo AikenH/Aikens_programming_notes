@@ -24,7 +24,9 @@ class Solution(object):
             return[j,i]
 
         '''Version 2 to pay attention to :hash-related '''
-        # TODO:参考参考答案中的哈希方法同时学习一下
+        
+        # 我上面写的这种方法实际上也是一种hash-like的写法了把。
+        # 问题是不知道这个取index的函数的时间复杂度
 
 
 

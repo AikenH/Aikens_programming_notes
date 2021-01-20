@@ -1,4 +1,14 @@
 {
-    "python.pythonPath": "D:\\Anaconda\\python.exe",
-    "jupyter.jupyterServerType": "local"
+    "python.pythonPath": "D:\\Applications\\AnaConda\\python.exe",
+    "jupyter.jupyterServerType": "local",
+    "files.associations": {
+        "unordered_map": "cpp",
+        "vector": "cpp",
+        "deque": "cpp",
+        "initializer_list": "cpp",
+        "list": "cpp",
+        "xhash": "cpp",
+        "xstring": "cpp",
+        "xutility": "cpp"
+    }
 }
