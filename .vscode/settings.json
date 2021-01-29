@@ -9,6 +9,9 @@
         "list": "cpp",
         "xhash": "cpp",
         "xstring": "cpp",
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "iostream": "cpp",
+        "ios": "cpp",
+        "xiosbase": "cpp"
     }
 }

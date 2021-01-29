@@ -649,6 +649,8 @@ vector<int> b(a); //声明容器b, 用容器a初始化b
 vector<int> b(a.begin(),a.begin()+3); //用0-2个元素来初始化
 vector <int> a(num); //
 vector <int> a (num,value);
+// 长度初始化
+vector<vector<int>> memo(w1_idx+1,vector<int>(w2_idx+1));
 ```
 
 **基本的一些method**
@@ -750,6 +752,17 @@ const char32_t* name4 = U"Aiken"; //4 byte
 - `using namespace std::string_literals`使得我们对 **“” -> string**的类型转换可以从
   `std::string("")`变成只需要`""s`
 - R"" 也很有用，:question:但是我忘了这个是用来干嘛的了
+
+**迭代器**
+
+```c++
+string A;
+A.begin() ！= A.end();
+// 反向迭代器
+A.rbegin()！= A.rend();
+```
+
+
 
 ### 栈数据类型（STACK）
 
