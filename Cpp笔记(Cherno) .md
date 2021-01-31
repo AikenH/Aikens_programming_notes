@@ -1322,6 +1322,18 @@ double b = (int)value +5.2 //我们可以看看没有这个int的结果
 
 这种类型转换实际上是更可靠的。
 
+#### 一些常见的类型之间的转换
+
+- char的int表达实际上就是该字符的ascii码
+
+```c++
+// string - int 
+int = stoi(string); //atoi?
+string = to_string(int);
+```
+
+
+
 ### 类型双关（Type Punning）
 
 **实际上就是获取某种类型变量的指针，然后转化成另一种类型的指针的操作。**
