@@ -2641,3 +2641,19 @@ https://blog.51cto.com/8681495/1416759
 也不要写像这种的
 
 `v[i] = ++i;`
+
+### 常用函数的使用方法
+
+#### sort （基于快排的实现）
+
+通常很多情况下和lambda匿名函数一起使用，下面举两个例子
+
+```c++
+vector<vector<int>>& envelopes;
+sort(envelopes.begin(), envelopes.end(),
+  	[](const vector<int> & A , const vector<int> & B){
+    return A[0]<B[0] || (A[0]==B[0] && A[1]>B[1]);});
+```
+
+上面是对一个二维的动态数组进行排序的方法，使用自己编写的lambda对比函数，其中return的是A在B前面的bool判断。
+

@@ -6,28 +6,11 @@
 #include<string>
 #include<queue>
 using namespace std;
-struct TreeNode {
-   int val;
-   TreeNode *left;
-   TreeNode *right;
-   TreeNode(int x) : val(x), left(NULL), right(NULL) {}
-};
-
-//Definition for singly-linked list.
-struct ListNode {
-   int val;
-   ListNode* next;
-   ListNode(int x) : val(x), next(NULL) {}
-};
-
 // -----------------------------------------question--------------------------
-
+// 在这里尝试的是建立DPtable的解法，很容易知道连个维度分别是s和p；
+// 思考的角度是，表示在第si个元素和第pi个元素之前的字符串是否还是匹配的。
 // -----------------------------------------ans--------------------------------
-class Solution {
-public:
-    bool isSubStructure(TreeNode* A, TreeNode* B) {
-        
-    }
+
 // -----------------------------------------test--------------------------------
 // 在这个地方编写测试样例并进行测试；
 int main()

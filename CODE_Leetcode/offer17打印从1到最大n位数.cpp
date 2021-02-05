@@ -6,28 +6,10 @@
 #include<string>
 #include<queue>
 using namespace std;
-struct TreeNode {
-   int val;
-   TreeNode *left;
-   TreeNode *right;
-   TreeNode(int x) : val(x), left(NULL), right(NULL) {}
-};
-
-//Definition for singly-linked list.
-struct ListNode {
-   int val;
-   ListNode* next;
-   ListNode(int x) : val(x), next(NULL) {}
-};
-
 // -----------------------------------------question--------------------------
-
+实际上是一个大数问题，这里的题目没有体现出来，在后面进行二刷的时候完成一下两种大数的写法把。
 // -----------------------------------------ans--------------------------------
-class Solution {
-public:
-    bool isSubStructure(TreeNode* A, TreeNode* B) {
-        
-    }
+
 // -----------------------------------------test--------------------------------
 // 在这个地方编写测试样例并进行测试；
 int main()
