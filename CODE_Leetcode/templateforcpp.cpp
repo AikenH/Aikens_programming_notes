@@ -28,6 +28,7 @@ public:
     bool isSubStructure(TreeNode* A, TreeNode* B) {
         
     }
+};
 // -----------------------------------------test--------------------------------
 // 在这个地方编写测试样例并进行测试；
 int main()

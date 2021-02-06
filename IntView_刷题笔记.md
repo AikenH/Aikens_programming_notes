@@ -117,7 +117,7 @@ void traverse(TreeNode root) {
 
 2. 刚才我们直接把 `head.next` 设置为 null，因为整个链表反转后原来的 `head` 变成了整个链表的最后一个节点。但现在 `head` 节点在递归反转之后不一定是最后一个节点了，所以要记录后驱 `successor`（第 n + 1 个节点），反转之后将 `head` 连接上
 
-   ![image-20210117213603460](Image/image-20210117213603460.png)
+   ![image-20210117213603460](${NoteImage}/image-20210117213603460.png)
 
 3. 注意这里tail的设置，理解透
 
@@ -282,7 +282,7 @@ if (fast != nullptr)
 // slow 指针现在指向链表中点
 ```
 
-![image-20210118130910320](刷题笔记.assets/image-20210118130910320.png)
+![image-20210118130910320](${NoteImage}/image-20210118130910320.png)
 
 - 如果fast不是nullptr，说明链表的长度为奇数，slow还需要往后进行一步，现在是卡在中间的地方
 
@@ -861,7 +861,7 @@ TreeNode* Codec::helprebuild(queue<string>& que)
 
 **每一层都是紧凑靠左排列的**
 
-![image-20210128140308774](刷题笔记.assets/image-20210128140308774.png)
+![image-20210128140308774](${NoteImage}/image-20210128140308774.png)
 
 首先这种节点情况进行计算的话，最优的时间复杂度应该是$O(logN * logN)$ ?
 
@@ -897,7 +897,7 @@ public int countNodes(TreeNode root) {
 
 **一棵完全二叉树的两棵子树，至少有一棵是满二叉树**：所以不断切分迭代的话，我们就知道每次的while是$O(logN)$ 需要迭代$O(logN)$的深度，所以就是上面分析的复杂度。
 
-![image-20210128141428195](刷题笔记.assets/image-20210128141428195.png)
+![image-20210128141428195](${NoteImage}/image-20210128141428195.png)
 
 #### :star: 二叉树的最近公共祖先（236）二刷
 
@@ -1226,7 +1226,7 @@ if (root.right == null) return root.left;
 
 **情况 3**：`A`有两个子节点，麻烦了，为了不破坏 BST 的性质，`A`**必须找到左子树中最大的那个节点，或者右子树中最小的那个节点来接替自己。**我们以第二种方式讲解。
 
-![image-20210121162504023](刷题笔记.assets/image-20210121162504023.png)
+![image-20210121162504023](${NoteImage}/image-20210121162504023.png)
 
 ```c++
 if (root.left != null && root.right != null) {
@@ -1421,7 +1421,7 @@ public:
 
 此外：我们**不要去分析最优**应该是什么样的，**遍历求最值**，就是能做的操作都做，使用动态规划的方式降维而已。
 
-![image-20210129123612710](刷题笔记.assets/image-20210129123612710.png)
+![image-20210129123612710](${NoteImage}/image-20210129123612710.png)
 
 **基本的实现思路如下（需要集成存储思路）** 但是如果这样的反向实现的话，很容易出现栈溢出的方法
 
@@ -1671,7 +1671,7 @@ public:
 
 在迭代搜索的过程中，只需要找比当前值更小的前序子序列+1取最大值就行，最终返回值是dp中的最大值，复杂度O(n^2). 
 
-![image-20210129143108977](刷题笔记.assets/image-20210129143108977.png)
+![image-20210129143108977](${NoteImage}/image-20210129143108977.png)
 
 空间复杂度还行，时间复杂度依旧拉跨。如何将算法的复杂度降低到O(n*long(n))
 
@@ -1715,7 +1715,7 @@ public:
 
 **通过排序（一正一逆来给问题降维成一个最长递增子序列的问题）**主要的实现难点应该就在快速排序和嵌套排序中。（这里肯定要使用快速排序把，这也是时间复杂度的重要标准来着。）
 
-![image-20210130135722870](刷题笔记.assets/image-20210130135722870.png)
+![image-20210130135722870](${NoteImage}/image-20210130135722870.png)
 
 ```c++
 二分查找的change位置放错了，找了半天
@@ -1786,9 +1786,9 @@ public:
 
 这一题的分析里面主要可以通过上面的假设和绘2维图来辅助分析，考虑到常规情况下的回文判断是对两侧的拓展实现的，如果不是两侧相同的画，两边不可能同时对子串发生回文增益；这句话中就隐含了一个操作和两个状态变换。
 
-![image-20210129170631630](刷题笔记.assets/image-20210129170631630.png)
+![image-20210129170631630](${NoteImage}/image-20210129170631630.png)
 
-![image-20210129170643937](刷题笔记.assets/image-20210129170643937.png)
+![image-20210129170643937](${NoteImage}/image-20210129170643937.png)
 
 代码实现。
 
@@ -2254,7 +2254,7 @@ public:
 
 可以发现其中的索引是反向的关系，那么就能给出如下图所示的搜索策略结论
 
-![image-20210202122213856](刷题笔记.assets/image-20210202122213856.png)
+![image-20210202122213856](${NoteImage}/image-20210202122213856.png)
 
 这样就可以简单的基于二分法来求解这样的优化过程，需要注意的是：
 
@@ -2310,7 +2310,239 @@ public:
 };
 ```
 
+##### 戳气球问题（312）
 
+也是个动态规划的问题，遍历所有情况选取最优，但是我觉得其实还能有别的解法，也就是从小到大选数，但是边界值还是要特殊处理，后续看看这种想法能不能写吧。动态规划的方法在我的GoodNote中写了，时间效率一般，看看别人的解答
+
+**首先给出动态规划情况下的思路和解答**
+
+```c++
+class Solution {
+public:
+    int maxCoins(vector<int>& nums) {        
+        if(nums.empty()) return 0;
+        // 首尾不包含
+        nums.insert(nums.begin(),1);
+        nums.push_back(1);
+        int n = nums.size();
+        // 加了两个之后的size
+        vector<vector<int>> DP(n,vector<int>(n,0));
+        // 从下往上遍历，从左往右遍历
+        for(int i = n-2; i>=0;i--)
+        {
+            for(int j =i+1; j<n; j++)
+            {
+                for(int k =i+1;k<j;k++)
+                {
+                    DP[i][j] = max(DP[i][j], nums[k]*nums[i]*nums[j]+DP[i][k]+DP[k][j]);
+                }
+
+            }
+        }
+        return DP[0][n-1];
+    }
+};
+```
+
+#### 博奕问题
+
+**博弈类问题的套路都差不多，下文举例讲解，其核心思路是在二维 dp 的基础上使用元组分别存储两个人的博弈结果。**下面引入一个例题
+
+**PAIR**
+
+将石头问题改的根据被一般性：
+
+> 石头的堆数可以是任意正整数，石头的总数也可以是任意正整数，这样就能打破先手必胜的局面了。比如有三堆石头 `piles = [1,100,3]`，先手不管拿 1 还是 3，能够决定胜负的 100 都会被后手拿走，后手会获胜。
+>
+> **假设两人都很聪明**，请你设计一个算法，返回先手和后手的最后得分（石头总数）之差。比如上面那个例子，先手能获得 4 分，后手会获得 100 分，你的算法应该返回 -96。
+
+实际上还是和上面的一样，没什么区别，就是，要用元组**（Pair）in CPP**，然后选取单步最优吧，后面的最优交给后面的去搜索得到。动态规划吗唔。实际上就还是遍历所有的解法。所以我们不用考虑搜索的策略。
+
+#### 四键键盘问题
+
+[第二种思路很有参考意义，第一种方法比较常规但是实际上反而没那么容易想到，效果也比较拉跨，不推荐学习。](https://mp.weixin.qq.com/s?__biz=MzAxODQxMDM0Mw==&mid=2247484469&idx=1&sn=e8d321c8ad62483874a997e9dd72da8f&chksm=9bd7fa3daca0732b316aa0afa58e70357e1cb7ab1fe0855d06bc4a852abb1b434c01c7dd19d6&scene=21#wechat_redirect)
+
+#### :star:股票问题
+
+根据FA中的讲解，这一部分我们对股票问题的分析分为两步，第一步是实现基本的动态规划解题框架；第二步是学习一下针对这类问题进阶的**状态机解法**的问题；
+
+首先LeetCode中的第一题股票问题就很简单，没什么好多说的，实际上分析问题是一个单次遍历求解最优值的过程；（问题分析能大大的减少复杂度）；
+
+然后我们可以从第二题引出我们的**动态规划解法的框架**：
+
+第二题实际上也给出了我们对于动态规划应用情景的更好理解: 也就是那种分段式的结构，只是把i,j从i到j修改成了买入和卖出而已。这就是股票问题的一个框架把。
+
+> 给定一个数组，它的第 *i* 个元素是一支给定股票第 *i* 天的价格。
+>
+> 设计一个算法来计算你所能获取的最大利润。你可以尽可能地完成更多的交易（多次买卖一支股票）。
+>
+> **注意：**你不能同时参与多笔交易（你必须在再次购买前出售掉之前的股票）。
+
+框架的具体实现（伪代码）：
+
+```python
+def maxProfit(prices):
+	res = 0;
+	for buy in range(len(prices)):
+		for sell in range(buy+1, len(prices)):
+			res = max(res, maxprofit(prices[sell+1:])+prices[sell]-prices[buy])
+	return res
+```
+
+第二题算法问题具体实现（第一题在代码中）
+
+这题使用这样递归的动态规划方法的话，确实是很简单，但是如果想要Bottom-Up去写好像还是比较麻烦的，也可能是这个定义不够好。
+
+> 初始的动态规划的思路，一维数组，存储的是从今天开始的买入卖出的最优解，但是这样的话，状态转移方程实际上是不好列的;（我们无法确定状态转移房方程）（可能还要多加一层循环把。）
+>
+> 同样如果我们设置为是从今天开始买入的最优解，这样我写的状态转移方程会导致一个问题，就是后续的sell和buy绑定了，就会没有遍历到所有情况。（:x:）（可能还要多加一层循环才能实现）
+
+:star:**官方的具体解法(考虑到现在手上是否持有股票)这应该就是C++情况下最合理的动态框架了**
+
+> 考虑到「不能同时参与多笔交易」，因此每天交易结束后只可能存在手里有一支股票或者没有股票的状态。然后根据有没有股票来进行四种状态转移。
+>
+> 定义状态 表示第 ii 天交易完后手里没有股票的最大利润， 表示第 ii 天交易完后手里持有一支股票的最大利润（ii 从 00 开始）。
+>
+
+```c++
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        int n = prices.size();
+        int dp[n][2];
+        dp[0][0] = 0, dp[0][1] = -prices[0];
+        for (int i = 1; i < n; ++i) {
+            dp[i][0] = max(dp[i - 1][0], dp[i - 1][1] + prices[i]);
+            dp[i][1] = max(dp[i - 1][1], dp[i - 1][0] - prices[i]);
+        }
+        return dp[n - 1][0];
+    }
+};
+```
+
+可以将其中的空间复杂度优化为如下形式：
+
+```c++
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        int n = prices.size();
+        int dp0 = 0, dp1 = -prices[0];
+        for (int i = 1; i < n; ++i) {
+            int newDp0 = max(dp0, dp1 + prices[i]);
+            int newDp1 = max(dp1, dp0 - prices[i]);
+            dp0 = newDp0;
+            dp1 = newDp1;
+        }
+        return dp0;
+    }
+};
+```
+
+还有一种解法就是下面的贪心算法，只要是正数我们就加的办法，下一个比上一个大，我们就卖，很简单。
+
+```c++
+int res = 0;
+for(int i =0; i<prices.size()-1; i++)
+{
+    if(prices[i+1]>prices[i]) res += (prices[i+1]- prices[i]);
+}
+return res;
+```
+
+##### 问题的变体：
+
+第三题，和第四题，都是限定了交易次数：如果使用的是递归的框架的话，就直接添加一个次数约束就可以了。上面的动态规划解法的话，给Dp添加一个次数的约束，然后在进行传递就可以了，后面自己修改一下写上来。
+
+第五题，资金要冻结一天，也就是要加一天才开始交易，稍微改一下就行了；
+
+第六题，每次卖出需要手续费，我们只需要在+price的时候把手续费扣除就可以了。
+
+##### :small_red_triangle: 状态机解法：
+
+状态机解法实际上就是基于官方解法的一种写法，也就是通过这个题目中的状态的转移来列DP方程把。然后基于这种分析方式的话，对于这道题来说，是一个通用的列方程的思路把。
+
+![image-20210206201826842](${NoteImage}/image-20210206201826842.png)
+
+实际上总结一下这些状态转移就是
+
+```c++
+base case:
+dp[-1][k][0] = dp[i][0][0] = 0;
+dp[-1][k][1] = dp[i][0][1] = -INT_MAX;
+Transfer:
+dp[i][k][1] = max(dp[i-1][k][1], dp[i-1][k][0] - prices[i]);
+dp[i][k][0] = max(dp[i-1][k][0], dp[i-1][k][1] + prices[i]);
+```
+
+按照这个框架去进行遍历就完事了，6题都可以按照这个框架去写，真的就是通用解，但是时间效率好像也不是特别高，但是需要注意的是，当k是无穷我们就不用特别的去约束，但是当k是有限值的时候，我们就记得要对k进行遍历，内层循环。
+
+1. 还有更为关键的点是（唯一的Hard，买卖的最佳时期的第三题）也就是只有两种k的时候，我们实际上可以重新分析这个状态转移，也就是，重新构筑这个状态表，改变一下原本的迭代形式。
+2. 另一点就是，我实在是不想用new，怎么用vector来建立这样一个3元组呢？到时候看看有没有示例代码；（pair？tuple？or something else？）**官方直接用两个向量来表示了**
+
+> 由于我们最多可以完成两笔交易，因此在任意一天结束之后，我们会处于以下五个状态中的一种：
+> 1.未进行过任何操作；
+> 2.只进行过一次买操作；
+> 3.进行了一次买操作和一次卖操作，即完成了一笔交易；
+> 4.在完成了一笔交易的前提下，进行了第二次买操作；
+> 5.完成了全部两笔交易。
+
+```c++
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        if(prices.empty()) return 0;
+        int n = prices.size();
+        int s1 = -prices[0]; int s2 = 0; //我可以不买，所以一定是0不是int——min
+        int s3 = INT_MIN; int s4 = 0; 
+        for(int i =1;i<n;i++){
+            s1 = max(s1, -prices[i]); //第一次买入可以任何时候
+            s2 = max(s2, s1+prices[i]); // 在此刻第一次卖出
+            s3 = max(s3, s2-prices[i]); // 第二次 买入
+            s4 = max(s4, s3+prices[i]);
+        }
+        return s4;
+    }
+};
+```
+
+限制了K次的情况,这里实现的时候有很多的细节，但是我觉得基于k的哪个东西有点不合理，所以我们试着用FA中的思路后面重写一下这个框架，其实要改的地方也不是特别多，稍微改几个象征值就可以了。
+
+```c++
+class Solution {
+public:
+    int maxProfit(int k, vector<int>& prices) {
+        if(prices.empty()) return 0;
+        int n = prices.size();
+        // BUY 表示已经持有股票的情况
+        // SELL 表示手上啥都没有的情况
+        k = min(k,n/2);
+        vector<vector<int>> DPBuy(n,vector<int>(k+1));
+        vector<vector<int>> DPSell(n,vector<int>(k+1,0));
+        // basecase;
+
+        DPBuy[0][0] = -prices[0];
+        for(int i = 1;i<=k;i++){
+            DPBuy[0][i] = DPSell[0][i] = INT_MIN/2; // 由于我们还要减去一些值，所以这里小但是也不要小的太过分
+        }
+        // ++ i 和i++ 在for循环里面是一样的，但是性能上在大量使用的时候++更好一些。
+        for(int i = 1;i<n;i++)
+        {
+            // 为什么这个时候要用作-price[I]
+            DPBuy[i][0] = max(DPBuy[i-1][0],-prices[i]);
+            for(int j = 1;j<=k;j++)
+            {
+                // 只在购买添加操作数，不在卖出添加炒作书
+                DPBuy[i][j] = max(DPBuy[i-1][j], DPSell[i-1][j]-prices[i]);
+                DPSell[i][j] = max(DPSell[i-1][j],DPBuy[i-1][j-1]+prices[i]);
+            }
+        }
+        return *max_element(DPSell[n-1].begin(),DPSell[n-1].end());
+    }
+};
+```
+
+加税的方法的话，就是要记得如果是在buy的时候扣税，记得在初始化的那次也要扣。在购买的时候扣就不用了。
 
 ### 贪心算法：动态规划的特例
 
@@ -2332,7 +2564,7 @@ public:
 2. 把所有与 x 区间相交的区间从区间集合 intvs 中删除。
 3. 重复步骤 1 和 2，直到 intvs 为空为止。之前选出的那些 x 就是最大不相交子集。
 
-![image-20210131145944299](刷题笔记.assets/image-20210131145944299.png)
+![image-20210131145944299](${NoteImage}/image-20210131145944299.png)
 
 ```c++
 // 代码的具体实现大致如下：
@@ -2490,7 +2722,7 @@ public:
 
 > 但是，真的需要「递归地」计算出每一个子问题的结果，然后求最值吗？**直观地想一想，似乎不需要递归，只需要判断哪一个选择最具有「潜力」即可**：
 >
-> ![image-20210131170727483](刷题笔记.assets/image-20210131170727483.png)
+> ![image-20210131170727483](${NoteImage}/image-20210131170727483.png)
 
 我们完全可以跳过那些被包含的情况，所以YOU KNOW
 
@@ -2847,7 +3079,7 @@ private:
 
 深度每增加一层，即说明匹配到了一个新的字符。使用迭代器指向word.begin()，深度每增加一层，令迭代器向前移动一个位置。如果该层找不到可行的路径，回溯到父节点，深度减小，迭代器也要后退一个位置，如果在搜索的过程中迭代器指向了word.end()，说明找到了可行路径，返回true，搜索结束。如果搜索了整个解空间树也没有找到可行路径，说明没有可行路径，返回false，搜索结束。
 
-![image-20210124224128288](刷题笔记.assets/image-20210124224128288.png)
+![image-20210124224128288](${NoteImage}/image-20210124224128288.png)
 
 ```c++
 class Solution {
@@ -3168,6 +3400,53 @@ public:
 };
 ```
 
+### 解决面试题的思路
+
+#### offer29 顺时针读取列表
+
+这题主要看怎么分析问题的吧，我再这题里面的height 和width写反了，有心情的时候改一下，具体的思路如图所示：
+
+![image-20210206120809298](Image/image-20210206120809298.png)
+
+```c++
+class Solution {
+public:
+    vector<int> spiralOrder(vector<vector<int>>& matrix) {
+        vector<int> res;
+        if(matrix.empty()) return res;
+        // 初始参数设置
+        bool ishori = false; // 先执行水平的 height才是水平
+        int offset_x=0,offset_y=0,xi=0,yi=-1;
+        int width=matrix.size(), height=matrix[0].size();
+
+        // 水平和垂直写反了，
+        while(width-offset_x && height-offset_y){
+            int step = 0;
+            if(ishori){
+                while(step<width-offset_x){
+                    xi = offset_x%2!=0? xi+1: xi-1;  // 基于就奇偶判断给xi上偏移量
+                    res.push_back(matrix[xi][yi]);
+                    step++;
+                }
+                ishori = false; offset_y++;
+                // 基于就奇偶判断给yi上偏移量
+                // yi = offset_x%2==0? yi+1:yi-1;
+            }else{
+                while(step<height-offset_y){
+                    yi = offset_y%2==0? yi+1: yi-1; // 基于就奇偶判断给yi上偏移量
+                    res.push_back(matrix[xi][yi]);
+                    step++;
+                }
+                ishori = true; offset_x++;
+                // xi = offset_y%2!=0? xi-1:xi+1;
+                // 基于就奇偶判断给xi上偏移量
+            }
+        }
+        return res;
+    }
+};
+```
+
 
 
 ## 《LeetCode》
@@ -3354,5 +3633,5 @@ public:
 
 > **首先，找到这两条分支的最近公共祖先`LCA`，然后从`master`节点开始，重演`LCA`到`dev`几个`commit`的修改**，如果这些修改和`LCA`到`master`的`commit`有冲突，就会提示你手动解决冲突，最后的结果就是把`dev`的分支完全接到`master`上面。
 
-![image-20210128144821217](刷题笔记.assets/image-20210128144821217.png)
+![image-20210128144821217](${NoteImage}/image-20210128144821217.png)
 
