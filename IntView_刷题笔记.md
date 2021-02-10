@@ -2544,6 +2544,187 @@ public:
 
 加税的方法的话，就是要记得如果是在buy的时候扣税，记得在初始化的那次也要扣。在购买的时候扣就不用了。
 
+#### 打家劫舍问题
+
+实际上是动态规划的问题，以及一些约束情况下的变体，我们要掌握到其中的精髓，进行分析；
+
+- 首先对动态规划的问题进行分析的时候我们都要好好的想一下到底是要用一维的表还是用二维的表；（不要使用冗余的操作）
+- 然后还是一样的进行存储空间的压缩就行；
+
+**打家劫舍1（198）**
+
+这一题的分析很容易可以知道是这样的情况：（我们可以反向分析，这样的话，就不需要修改Loop的方向了）
+
+![image-20210207143229362](${NoteImage}/image-20210207143229362.png)
+
+具体的代码实现和相应的空间优化后的结果如下：（100 98）
+
+```c++
+int rob(vector<int>& nums) {
+    if(nums.empty()) return 0;
+    // 两个相邻的房屋无法取到实际上就是一个简单的状态转移的问题；
+    int n = nums.size();
+    // vector<int> DP(n+1,0);
+    // 实际上就是一个单项的偷盗图
+    // BaseCases
+    // DP[0] = 0;
+    // DP[1] =nums[0]; 
+    // for(int i=2;i<=n;i++){
+    //     DP[i] = max(nums[i-1]+ DP[i-2], DP[i-1]); 
+    // }
+    // return DP[n];
+    // 基于参数的特性进行存储空间优化
+    int d0 = 0; int d1 = nums[0];
+
+    for(int i =1;i<n;i++){
+        int temp = d1;
+        d1 = max(d0 + nums[i], d1);
+        d0 = temp;
+    }
+    return d1;
+}
+```
+
+**打家劫舍Ⅱ**  第二题和第一题的区别就在于，这个房子是围成一圈的，所以就是，首尾相连的序列，（这应该会使得边界条件更加的复杂，或者引入新的约束）
+
+问题分析：这题仔细分析以后实际上可以发现就是要么是不包含头，要么是不包含尾（为0），两个取最大值就好了。稍微修改
+
+**打家劫舍Ⅲ** 这一题的特点在于房屋的分布是二叉树，最基本的思想还是这样就是，不买就跳下一级，买就跳两级，DP存储就行；
+
+但是这一题还有一个更加精妙的解法，就是像股票那样，存储该节点购买和不购买的两种情况，通过这种情况进行转移函数就行，这题的话参考官方解法的写法更清楚，而且还有后续优化的结果。
+
+常规解法（my）
+
+```c++
+class Solution {
+private:
+    unordered_map<TreeNode*, int> DP;
+public:
+    int rob(TreeNode* root) {
+        if(!root) return 0;
+        if(DP.find(root)!= DP.end()) return DP[root];
+        // if(DP.contains(root)) return DP[root];
+        int robres = rob(root->left)+ rob(root->right);
+        int unrobres = root->val;
+        unrobres += !root->left? 0: (rob(root->left->left) +rob(root->left->right));
+        unrobres += !root->right? 0: (rob(root->right->left) + rob(root->right->right));
+        int res = max(robres, unrobres);
+        DP[root] = res;
+        return res;
+    }
+};
+```
+
+
+
+```c++
+1. 结合了后续遍历框架：因为我们要知道后续的值才能对前序的值进行处理，所以我们需要先遍历后面的
+我们可以用 f(o) 表示选择 o 节点的情况下，o 节点的子树上被选择的节点的最大权值和；g(o) 表示不选择 o 节点的情况下，o 节点的子树上被选择的节点的最大权值和；l 和 r 代表 o 的左右孩子。
+
+class Solution {
+public:
+    unordered_map <TreeNode*, int> f, g;
+
+    void dfs(TreeNode* node) {
+        if (!node) {
+            return;
+        }
+        dfs(node->left);
+        dfs(node->right);
+        f[node] = node->val + g[node->left] + g[node->right];
+        g[node] = max(f[node->left], g[node->left]) + max(f[node->right], g[node->right]);
+    }
+
+    int rob(TreeNode* root) {
+        dfs(root);
+        return max(f[root], g[root]);
+    }
+};
+```
+
+**这题的优化写法十分的值得参考，我们如何利用我们自己创造的数据结构**
+
+```c++
+struct SubtreeStatus {
+    int selected;
+    int notSelected;
+};
+
+class Solution {
+public:
+    SubtreeStatus dfs(TreeNode* node) {
+        if (!node) {
+            return {0, 0};
+        }
+        auto l = dfs(node->left);
+        auto r = dfs(node->right);
+        int selected = node->val + l.notSelected + r.notSelected;
+        int notSelected = max(l.selected, l.notSelected) + max(r.selected, r.notSelected);
+        return {selected, notSelected};
+    }
+
+    int rob(TreeNode* root) {
+        auto rootStatus = dfs(root);
+        return max(rootStatus.selected, rootStatus.notSelected);
+    }
+};
+
+```
+
+#### 回文问题终结版：最小代价构造回文串（1312）
+
+是一个非常典型的动态规划的问题，这种子串的问题通常就是基于二维的DP Table去做，那么实现上就是，存储的就是从i,j的字符，构造成回文串的最少次数。
+
+但是这一题有个陷阱，通常来说，我们分析回文串的问题都是从中间向两端拓展的，但是如果我们每次拓展都直接判断两端的拓展是否相等的话，（+2）这样对于数组完全相等，只需要加1的情况就缺乏了考虑。
+
+![image-20210207175200481](${NoteImage}/image-20210207175200481.png)
+
+**解决的方式** 我们只需要一边一边的加就可以了 状态转移方程 = max 左或右 +1；
+
+基本的解决方法(可以在算法的基础上进行空间压缩，只需要一个向量
+
+```c++
+class Solution {
+public:
+    int minInsertions(string s) {
+        if(s.empty()) return 0;
+        int n = s.size();
+        // 建立存储表和初始化参数（单个或者是边界都是0）
+        vector<vector<int>> DP(n,vector<int>(n,0));
+        // 遍历方向，从从下到上，从左到右
+        for(int i=n-2; i>=0; i--){
+            for(int j=i+1; j<n; j++){
+                // 搜先判断延拓的情况是是否是相等的
+                if(s[i] == s[j]) DP[i][j] = DP[i+1][j-1];
+                else DP[i][j] = min(DP[i+1][j], DP[i][j-1]) +1;
+            }
+        }
+        return DP[0][n-1];
+    }
+};
+```
+
+数据压缩后的结果，这个压缩方案实际上比较常见，用代码取解读的话也比较好解读
+
+```c++
+if(s.empty()) return 0;
+int n = s.size();
+vector<int> DP(n,0);
+for(int i=n-2; i>=0; i--){
+    int pre = 0;
+    for(int j=i+1; j<n; j++){
+        // 搜先判断延拓的情况是是否是相等的
+        int temp = DP[j]; // 到下一轮编程i+1 j-1的值 ，在本轮是i+1，j的值（未更新）
+        if(s[i] == s[j]) DP[j] = pre;
+        else DP[j] = min(DP[j], DP[j-1])+1;
+        pre = temp; // 经典压缩策略
+    }
+}
+return DP[n-1];
+```
+
+
+
 ### 贪心算法：动态规划的特例
 
 [FA中对贪心算法的简单讲解](https://mp.weixin.qq.com/s?__biz=MzAxODQxMDM0Mw==&mid=2247484493&idx=1&sn=1615b8a875b770f25875dab54b7f0f6f&chksm=9bd7fa45aca07353a347b7267aaab78b81502cf7eb60d0510ca9109d3b9c0a1d9dda10d99f50&scene=21#wechat_redirect)
@@ -2748,6 +2929,663 @@ public:
         }
         return jumps;
 
+    }
+};
+```
+
+### KMP算法：动态规划下属
+
+**著名的字符串匹配算法** 效率很高，但是确实比较[复杂](https://mp.weixin.qq.com/s?__biz=MzAxODQxMDM0Mw==&mid=2247484731&idx=2&sn=d9d6b24c7f94d5e43e08666e82251984&chksm=9bd7fb33aca0722548580dd27eb49880dc126ef87aeefedc33aa0f754f54691af6b09b41f45f&scene=21#wechat_redirect)；
+
+> **先在开头约定，本文用`pat`表示模式串，长度为`M`，`txt`表示文本串，长度为`N`。KMP 算法是在`txt`中查找子串`pat`，如果存在，返回这个子串的起始索引，否则返回 -1**。
+
+这个题目时要匹配完全一致的，也就是顺序不能打乱或者跳过的那种子串
+
+遍历的解法如下所示：（伪代码）
+
+```cpp
+int search(String pat, String txt) {
+    int M = pat.length;
+    int N = txt.length;
+    for (int i = 0; i <= N - M; i++) {
+        int j;
+        for (j = 0; j < M; j++) {
+            if (pat[j] != txt[i+j])
+                break;
+        }
+        // pat 全都匹配了
+        if (j == M) return i;
+    }
+    // txt 中不存在 pat 子串
+    return -1;
+}
+```
+
+但是这样就有很多完全不需要考虑的不可能的情况的计算无法跳过了，所以我们希望使用一些存储空间来辅助算法的进行。
+
+**KMP特点**永不回退指针i，不走回头路，也就是不会对txt进行重复的多次扫描，会利用DP数组中的信息将pat移到正确的位置来继续匹配。
+
+那么这个数组如何构建呢？（**确定有限状态自动机**）
+
+**这个DP只与pat相关，与Txt没有任何关系**
+
+实际上就是构建状态转移图，然后根据状态转移图来跳转：（这里省略了到0）
+
+![image-20210208163229303](${NoteImage}/image-20210208163229303.png)
+
+这个DP数组的定义方式：
+
+```cpp
+dp[j][c] = next
+0 <= j < M，代表当前的状态
+0 <= c < 256，代表遇到的字符（ASCII 码）
+0 <= next <= M，代表下一个状态
+
+dp[4]['A'] = 3 表示：
+当前是状态 4，如果遇到字符 A，
+pat 应该转移到状态 3
+
+dp[1]['B'] = 2 表示：
+当前是状态 1，如果遇到字符 B，
+pat 应该转移到状态 2
+```
+
+根据上面的数组可以构建出这样的状态转移过程
+
+```cpp
+public int search(String txt) {
+    int M = pat.length();
+    int N = txt.length();
+    // pat 的初始态为 0
+    int j = 0;
+    for (int i = 0; i < N; i++) {
+        // 当前是状态 j，遇到字符 txt[i]，
+        // pat 应该转移到哪个状态？
+        j = dp[j][txt.charAt(i)];
+        // 如果达到终止态，返回匹配开头的索引
+        if (j == M) return i - M + 1;
+    }
+    // 没到达终止态，匹配失败
+    return -1;
+}
+```
+
+所以整个DP数组的构建状态：
+
+```cpp
+for 0 <= j < M: # 状态
+    for 0 <= c < 256: # 字符
+        dp[j][c] = next;
+```
+
+实际上就是一种匹配和另一种回退的状态变迁，但是这种状态回退该怎么设置，**影子状态**的思想：
+
+<u>和当前的状态具有相同的前缀的状态就是影子状态（类似双指针算法用来辅助）</u>那么具体怎么实现呢？前缀的长度？
+
+就可以改进上面的代码如下：
+
+```cpp
+int X # 影子状态
+for 0 <= j < M:
+    for 0 <= c < 256:
+        if c == pat[j]:
+            # 状态推进
+            dp[j][c] = j + 1;
+        else: 
+            # 状态重启
+            # 委托 X 计算重启位置
+            dp[j][c] = dp[X][c];
+```
+
+**完整的最终代码如下**
+
+```cpp
+public class KMP {
+    private int[][] dp;
+    private String pat;
+
+    public KMP(String pat) {
+        this.pat = pat;
+        int M = pat.length();
+        // dp[状态][字符] = 下个状态
+        dp = new int[M][256];
+        // base case，也就是遇到了第一个字符才能转移到1
+        dp[0][pat.charAt(0)] = 1;
+        // 影子状态 X 初始为 0
+        int X = 0;
+        // 当前状态 j 从 1 开始
+        for (int j = 1; j < M; j++) {
+            for (int c = 0; c < 256; c++) {
+                if (pat.charAt(j) == c) 
+                    dp[j][c] = j + 1;
+                else 
+                    dp[j][c] = dp[X][c];
+            }
+            // 更新影子状态 影子状态的更新，是随着j的更新而更新的
+            X = dp[X][pat.charAt(j)];
+        }
+    }
+
+    public int search(String txt) {...}
+}
+```
+
+这里解释一下影子的更新具体是如何做到，这里从文章中抄一下
+
+```cpp
+这里的状态如下：
+int X = 0;
+for (int j = 1; j < M; j++) {
+    ...
+    // 更新影子状态
+    // 当前是状态 X，遇到字符 pat[j]，
+    // pat 应该转移到哪个状态？
+    X = dp[X][pat.charAt(j)];
+}
+而搜索过程中：
+int j = 0;
+for (int i = 0; i < N; i++) {
+    // 当前是状态 j，遇到字符 txt[i]，
+    // pat 应该转移到哪个状态？
+    j = dp[j][txt.charAt(i)];
+    ...
+}
+```
+
+**其中的原理非常微妙**，注意代码中 for 循环的变量初始值，可以这样理解：后者是在`txt`中匹配`pat`，前者是在`pat`中匹配`pat[1:]`，状态`X`总是落后状态`j`一个状态，与`j`具有最长的相同前缀。所以我把`X`比喻为影子状态，似乎也有一点贴切。
+
+另外，构建 dp 数组是根据 base case`dp[0][..]`向后推演。这就是我认为 KMP 算法就是一种动态规划算法的原因。
+
+:star: 下面来看一下状态转移图的完整构造过程，你就能理解状态`X`作用之精妙了：
+
+```cpp
+public class KMP {
+    private int[][] dp;
+    private String pat;
+
+    public KMP(String pat) {
+        this.pat = pat;
+        int M = pat.length();
+        // dp[状态][字符] = 下个状态
+        dp = new int[M][256];
+        // base case
+        dp[0][pat.charAt(0)] = 1;
+        // 影子状态 X 初始为 0
+        int X = 0;
+        // 构建状态转移图（稍改的更紧凑了）
+        for (int j = 1; j < M; j++) {
+            for (int c = 0; c < 256; c++)
+                dp[j][c] = dp[X][c];
+            dp[j][pat.charAt(j)] = j + 1;
+            // 更新影子状态,因为一开始落后一步，然后后面是完全一样的更新，所以只有当
+            // 又到达重复状态的时候，才会需要进行X的更新。
+            X = dp[X][pat.charAt(j)];
+        }
+    }
+
+    public int search(String txt) {
+        int M = pat.length();
+        int N = txt.length();
+        // pat 的初始态为 0
+        int j = 0;
+        for (int i = 0; i < N; i++) {
+            // 计算 pat 的下一个状态
+            j = dp[j][txt.charAt(i)];
+            // 到达终止态，返回结果
+            if (j == M) return i - M + 1;
+        }
+        // 没到达终止态，匹配失败
+        return -1;
+    }
+}
+```
+
+### 回溯算法详解
+
+我们的目标是“[没有蛀牙](https://mp.weixin.qq.com/s?__biz=MzAxODQxMDM0Mw==&mid=2247484709&idx=1&sn=1c24a5c41a5a255000532e83f38f2ce4&chksm=9bd7fb2daca0723be888b30345e2c5e64649fc31a00b05c27a0843f349e2dd9363338d0dac61&scene=21#wechat_redirect)”，框架化回溯算法：实际上我好像也做了很多和回溯相关的题目了，和这里的思路对照一下；
+
+**解决一个回溯问题，实际上就是一个决策树的遍历过程**。只需要考虑三个问题
+
+**1、路径**：也就是已经做出的选择。
+
+**2、选择列表**：也就是你当前可以做的选择。
+
+**3、结束条件**：也就是到达决策树底层，无法再做选择的条件。
+
+具体代码框架：**其核心就是 for 循环里面的递归，在递归调用之前「做选择」，在递归调用之后「撤销选择」** 我觉得这里应该就是存储一个中间结果来做把。通过具体的代码来看看
+
+```cpp
+result = []
+def backtrack(路径, 选择列表):
+    if 满足结束条件:
+        result.add(路径)
+        return
+
+    for 选择 in 选择列表:
+        做选择
+        backtrack(路径, 选择列表)
+        撤销选择
+```
+
+![image-20210208175502040](${NoteImage}/image-20210208175502040.png)
+
+#### 全排列问题： 
+
+**我们只要在递归之前做出选择，在递归之后撤销刚才的选择**，就能正确得到每个节点的选择列表和路径。（实际上这种通常和DFS并在一起用，先遍历了某个选择下的所有可能，然后回到之前的这个节点）
+
+但是`vector`没有find之类的函数，所以我们可以通过index 和 swap操作区是实现这样的假装删除，
+
+```cpp
+class Solution {
+public:
+    void backtrack(vector<vector<int>>& res, vector<int>& output, int first, int len){
+        // 所有数都填完了
+        if (first == len) {
+            res.emplace_back(output);
+            return;
+        }
+        for (int i = first; i < len; ++i) {
+            // 动态维护数组
+            swap(output[i], output[first]);
+            // 继续递归填下一个数
+            backtrack(res, output, first + 1, len);
+            // 撤销操作
+            swap(output[i], output[first]);
+        }
+    }
+    vector<vector<int>> permute(vector<int>& nums) {
+        vector<vector<int> > res;
+        backtrack(res, nums, 0, (int)nums.size());
+        return res;
+    }
+};
+```
+
+#### N皇后问题：
+
+实际上是一种特殊的全排列问题，我采取的方式是从上到下进行构建，这样的话判断valid以及遍历过程会清晰一些，同时我们每次只需要做一个单行的loop就行了，实际上就是一个典型的回溯问题，其中有一些需要注意的点
+
+**数据类型**的使用，**边界条件的约束**，还有就是，数据变量的生存周期；
+
+```c++
+class Solution {
+private:
+    vector<vector<string>> res;
+public:
+    vector<vector<string>> solveNQueens(int n) {
+        // 实际上就是全排列啊，不满足再取消就行了。
+        // 问题在于怎么设置判断和返回条件。
+        
+        // 棋盘初始化，我们一列一列的开始遍历。
+        vector<string>board(n, string(n,'.'));
+        backtrack(board,0);
+        return res;
+    }
+    void backtrack(vector<string>& board, int row){
+        int n = board.size();
+        if(row>=n) return;
+        for(int j=0;j<n;j++){
+            // 假如某行的每一个都不合法，那就说明之前的摆法已经没救了。
+            if(!isValid(board, row, j)) 
+            {
+                // cout<<row<<"  "<<j<<endl;
+                continue; 
+            }
+            // cout<<row<<"&"<<j<<"="<<"Q";
+            board[row][j] = 'Q';
+            if(row == n-1) {
+                res.emplace_back(board);
+                // cout<<endl;
+                // 这里进行复原很容易忘记，这里需要注意一下，同时这个可以编程n，然后放到最前面去，效率可能会更高?
+                board[row][j] = '.';
+                continue;
+            }
+            backtrack(board, row+1);
+            board[row][j] = '.';
+        }
+        return;
+    }
+    bool isValid(vector<string>& board, int row, int col){
+        /* 对三种情况进行判断，上方，左前方和右前方
+        由于我们是从上往下添加的，所以下方的情况暂时不用考虑 */
+
+        int n = board.size();
+        // situation1
+        for(int i = row; i>=0; i--){
+            if(board[i][col] == 'Q') return false;
+        }
+        // situation2 左上角
+        int offset = 0;
+        for(int i = row; i>=0; i--){
+            if(col-offset<0) break;
+            if(board[i][col-offset] == 'Q') return false;
+            offset++;
+        }
+        // situation3 右上角
+        offset = 0;
+        for(int i = row; i>=0; i--){
+            if(col+offset>=n) break;
+            if(board[i][col+offset] == 'Q') return false;
+            offset++;
+        }
+        return true;
+    }
+};
+```
+
+#### 子集问题
+
+通过回溯或者迭代的方式来搜索子集，是一个典型但是实际上难度不是特别大的题目，可以用作基本的思路回顾。
+
+```c++
+class Solution {
+private:
+    vector<vector<int>> res;
+public:
+    vector<vector<int>> subsets(vector<int>& nums) {
+        /* 实际上这题可以使用2.5种不同的思路去解决 
+        1. 递归法：由于重叠子问题的存在和特殊性，（子问题的每一项加上新加入的一项）
+        2. 回溯法：前序，也就是不断后移动start，然后逐个加入
+        后续，使用pop出来的值来用（不是特别贴切）还是前一种好*/
+        
+        // 递归法
+        // if(nums.empty()) return {{}};
+        // int n = nums.back();
+        // nums.pop_back();
+        // vector<vector<int>> res = subsets(nums);
+        // int size = res.size();
+        // for(int i = 0; i <size; i++)
+        // {
+        //     res.emplace_back(res[i]);
+        //     res.back().push_back(n);
+        // }
+        // return res;
+        
+        // 回溯法
+        vector<int> tempv;
+        int start = 0;
+        backtrack(nums,tempv,0);
+        return res;
+        
+    }
+    void backtrack(vector<int>& nums,vector<int>& tempv, int start){
+        res.push_back(tempv);
+        int n = nums.size();
+        for(int i=start; i<n; ++i){
+            tempv.push_back(nums[i]);
+            backtrack(nums,tempv,i+1);
+            tempv.pop_back();
+        }
+        return ;
+
+    }
+};
+```
+
+#### 组合问题
+
+实际上也就是典型的回溯框架，由于我们的[1,2]和[2,1]算是重复的两种情况，所以我们和上面一样用start来进行约束就可以了。就能避免重复组合的情况发生，还是在上面的框架上稍微改改.
+
+这题实际上和上面的排列问题是一对，可以对照着看，看看两个方法编写上的**不同之处和相同之处**，实际上就是同个框架下的不同写法。
+
+```c++
+#include<vector>
+using namespace std;
+
+class Solution {
+private:
+    vector<vector<int>> res;
+public:
+    vector<vector<int>> combine(int n, int k) {
+        if (k<=0 || n<=0) return res;
+        vector<int> tempv;
+        backtrack(n,k,0 ,tempv);
+        return res;
+    }
+    void backtrack(int n, int k, int start,vector<int> tempv){
+        if(tempv.size() == k) res.emplace_back(tempv);
+        for(int i =start; i<n;i++){
+            tempv.push_back(i+1);
+            backtrack(n,k,i+1,tempv);
+            tempv.pop_back();
+        }
+    }
+};
+```
+
+#### 解数独：
+
+整体上，我非常的不同意这个作者写的代码，因为我觉得她的两个循环实际上是多余的，他的状态转移是有问题的。
+
+由于一开始有是否有值的判断，所以那个for循环勉强还是可以的把，但是我觉得我的写法更好一些，这一题的主要问题在于。
+
+- 如何终止搜索过程！，如何在找到一个解后就安然离去！！仔细思考。
+- 还有那个else为什么很重要！！，没有这个else我们可能会讲原值给改了。
+
+```cpp
+#include<vector>
+using namespace std;
+
+class Solution {
+public:
+    void solveSudoku(vector<vector<char>>& board) {
+        backtrack(board,0,0);
+    }
+    bool backtrack(vector<vector<char>>& board, int r, int c){
+        // 这里的这个逻辑我有点没搞清楚，为什么要全进行m-n的遍历，我觉得是多余的
+        // 首先继续宁测试，如果不对再说
+        if(r==9) 
+            return true;
+        // 判断下一个位置：
+        int nextr = r, nextc =c;
+        nextc++;
+        if(nextc>=9) {
+            nextr++; 
+            nextc=0;}
+
+        // 判断返回值
+        if(board[r][c]!='.') {
+            // 
+            if(backtrack(board,nextr,nextc))
+                return true;
+            else
+                return false;
+        }
+
+        for(char ch = '1'; ch<='9'; ch++){
+            if(!isValid(board, r, c, ch)) continue;
+            
+            board[r][c] = ch;
+            if(backtrack(board,nextr,nextc)) return true;
+            // 问题应该是出在，找到了解以后没有返回的问题
+            board[r][c] = '.';
+            
+        }
+        return false;
+
+    }
+    bool isValid(vector<vector<char>>& board, int r, int c, char ch){
+        // 从上到下填，但是我们还是需要搜索整张棋盘，
+        for (int i = 0; i<9; i++) {
+            if(board[r][i] == ch) return false;
+            if(board[i][c] == ch) return false;
+            if(board[(r/3)*3+i/3][(c/3)*3 +i%3]==ch) return false;
+        }
+        return true;
+    }
+};
+```
+
+#### 合法括号生成：（22）回溯算法最佳实践
+
+实际上的关键还是在于问题分析的部分：
+
+**1、一个「合法」括号组合的左括号数量一定等于右括号数量，这个显而易见**。
+
+**2、对于一个「合法」的括号字符串组合`p`，必然对于任何`0 <= i < len(p)`都有：子串`p[0..i]`中左括号的数量都大于或等于右括号的数量**。
+
+然后就可以使用 回溯的基本框架来完成代码了。
+
+- 结束的技巧和之前稍微有点不同可以学一下。
+
+```c++
+class Solution {
+public:
+    vector<string> generateParenthesis(int n) {
+        if (n == 0) return {};
+        // 记录所有合法的括号组合
+        vector<string> res;
+        // 回溯过程中的路径
+        string track;
+        // 可用的左括号和右括号数量初始化为 n
+        backtrack(n, n, track, res);
+        return res;
+    }
+
+    // 可用的左括号数量为 left 个，可用的右括号数量为 rgiht 个
+    void backtrack(int left, int right, 
+                    string& track, vector<string>& res) {
+        // 若左括号剩下的多，说明不合法
+        if (right < left) return;
+        // 数量小于 0 肯定是不合法的
+        if (left < 0 || right < 0) return;
+        // 当所有括号都恰好用完时，得到一个合法的括号组合
+        if (left == 0 && right == 0) {
+            res.push_back(track);
+            return;
+        }
+
+        // 尝试放一个左括号
+        track.push_back('('); // 选择
+        backtrack(left - 1, right, track, res);
+        track.pop_back(); // 撤消选择
+
+        // 尝试放一个右括号
+        track.push_back(')'); // 选择
+        backtrack(left, right - 1, track, res);
+        track.pop_back(); // 撤消选择
+    }
+};
+```
+
+### BFS算法详解
+
+BFS和DFS框架，实际上DFS在回溯算法中写了很多了，这实际上就是一回事，NOW我们来学习一下BFS。
+
+>  *BFS 的核心思想应该不难理解的，就是把一些问题抽象成图，从一个点开始，向四周开始扩散。一般来说，我们写 BFS 算法都是用「队列」这种数据结构，每次将一个节点周围的所有节点加入队列。*
+>
+> ***BFS 相对 DFS 的最主要的区别是：**BFS 找到的路径一定是最短的，但代价就是空间复杂度比 DFS 大很多***。
+
+问题的本质（广义描述）是：
+
+**在一幅「图」中找到从起点`start`到终点`target`的最近距离，这个例子听起来很枯燥，但是 BFS 算法问题其实都是在干这个事儿。**
+
+> 比如走迷宫，有的格子是围墙不能走，从起点到终点的最短距离是多少？如果这个迷宫带「传送门」可以瞬间传送呢？
+>
+> 再比如说两个单词，要求你通过某些替换，把其中一个变成另一个，每次只能替换一个字符，最少要替换几次？
+>
+> 再比如说连连看游戏，两个方块消除的条件不仅仅是图案相同，还得保证两个方块之间的最短连线不能多于两个拐点。你玩连连看，点击两个坐标，游戏是如何判断它俩的最短连线有几个拐点的？
+
+**实现框架伪代码**
+
+这个框架后面我们后面需要修正一下，便于贴切现在的版本，用我们自己的形式重新总结一下体系架构。
+
+```cpp
+// 计算从起点 start 到终点 target 的最近距离
+int BFS(Node start, Node target) {
+    Queue<Node> q; // 核心数据结构
+    Set<Node> visited; // 避免走回头路
+
+    q.offer(start); // 将起点加入队列
+    visited.add(start);
+    int step = 0; // 记录扩散的步数
+
+    while (q not empty) {
+        int sz = q.size();
+        /* 将当前队列中的所有节点向四周扩散 */
+        for (int i = 0; i < sz; i++) {
+            Node cur = q.poll(); // 访问队列中的当前节点
+            /* 划重点：这里判断是否到达终点 */
+            if (cur is target)
+                return step;
+            /* 将 cur 的相邻节点加入队列 */
+            for (Node x : cur.adj())
+                if (x not in visited) {
+                    q.offer(x);
+                    visited.add(x);
+                }
+        }
+        /* 划重点：更新步数在这里 */
+        step++;
+    }
+}
+```
+
+其中adj：相邻节点；visited：不会走回头路，比如说二叉树之类的，就不需要这种结构。
+
+#### 二叉树的最小高度（111）
+
+首先这题实际上使用二叉树的普通遍历框架就已经能解决了，我们先给出一个常规解法的答案在这,然后我们便开始正经探讨到底要怎么解决这个问题，使用BFS的框架，我们现在使用的实际上仍然是DFS。
+
+用这题来对DFS和BFS两种框架的解题思路进行比对和分析。
+
+```cpp
+class Solution {
+private:
+    int res = INT_MAX;
+public:
+    int minDepth(TreeNode* root) {
+        if(!root) return 0;
+        helpFind(root,0);
+        return res;
+    }
+    void helpFind(TreeNode* root, int step){
+        // 是没有子节点的节点，也就是左右节点都没有要注意区分
+        if(!root){return;}
+        step++;
+        if(!root->left && !root->right)
+        {
+            if(step<res) res = step;
+            return;
+        }
+        helpFind(root->right,step);
+        helpFind(root->left,step);
+    }
+};
+```
+
+**BFS解题框架**
+
+深度优先搜索，就是我之前希望的搜索思路，这样能够更快的结束这样的搜索过程，就能取得更高的时间和空间效率，在这里我们也对原本的解题框架，进行了一个修正。 
+
+1. 利用patr 来取代depth的设置。
+2. 原本框架中的循环好像是么必要的把。（必要的情况分析：如果需要一层一层的做的话，也就是深度+1在层次之外？）oh 不，就是利用pair就能解决这个问题，不需要这样一个循环了，也就是我们要明确深度+1的过程在哪里执行，当然他那样好像会更节省空间吧，
+
+```cpp
+class Solution {
+private:
+    // int res = INT_MAX;
+public:
+    int minDepth(TreeNode* root) {
+        if(!root) return 0;
+        queue<pair<TreeNode *, int>> q;
+        // 初始化队列起点
+        q.emplace(root,1);
+        while(!q.empty()){
+            // int sz = q.size();
+            // for(int i=0;i<sz;i++){
+            TreeNode *temp = q.front().first;
+            int depth = q.front().second;
+            if(!temp->right && !temp->left)
+                return depth;
+            if(temp->left != nullptr)
+                q.emplace(temp->left, depth+1);
+            if(temp->right != nullptr)
+                q.emplace(temp->right,depth+1);
+            q.pop();
+            // }
+        }
+        return 0;
     }
 };
 ```

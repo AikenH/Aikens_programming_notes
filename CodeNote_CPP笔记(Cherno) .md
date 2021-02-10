@@ -701,6 +701,8 @@ std::vector<Vertex> Vertices;
 Vertices.reserve(3);
 ```
 
+
+
 ### 字符串（String）
 
 **String - stream of text 一组字符串 == array of characters**
