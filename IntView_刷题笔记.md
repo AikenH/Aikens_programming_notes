@@ -3590,6 +3590,210 @@ public:
 };
 ```
 
+#### 打开转盘锁（752）
+
+这一题我觉得是可以使用回溯算法来做，但是好像标准的解法就是使用BFS的方法去做，这样做的话，我按照原本的框架写出了如下的代码，但是这样的代码的时间复杂度超过了题目要求的水准，所以是算法的优化还能提升还是说是其他写法的BFS问题呢？
+
+可以优化：通过Unorder_set 来优化搜索的过程。具体的改进已经写进代码里了。
+
+- 实际上就是看成一张图，然后同个时刻能做出的选择有8个，4个转盘分别从两边转，然后我们就看成是图传播，在解决一下重复和deadends就行了。
+
+```cpp
+class Solution {
+public:
+    int openLock(vector<string>& deadends, string target) {
+        // 使用回溯法遍历所有的可能性,同时做出特殊的终结判断
+        // 同时维护一个最小值,然后最终返回.
+
+        // 正确理解题目的意思(每次只能转动单个转盘,而且只能移动一格)
+        // 为什么使用BFS,最短路径,找到了就提前终止,同时是路径问题
+        
+        if (target.empty()) return -1; // 非法情况约束
+        //初始化搜索队列
+        // FIXME: 不走回头路这点怎么实现。hash_set?
+        queue<pair<string, int>> que;
+        unordered_set<string> visited;
+        unordered_set<string> dead(deadends.begin(),deadends.end());
+        que.emplace("0000", 0);
+        // visited.insert("0000");
+
+        while (!que.empty()) {
+            //基于多个方向搜索。
+            // FIXME: deadends 还没有建立排除的机制。
+            string temp = que.front().first;
+            
+            int depth = que.front().second;
+            if (temp == target) return depth;
+            que.pop();
+            if (visited.find(temp) != visited.end()) continue;
+            //if (containsDeadend(temp, deadends)) continue;
+            if(dead.find(temp) != dead.end()) continue;
+            visited.insert(temp);
+            for (int i = -4; i < 0; i++) {
+                auto next = moveLock(temp, i);
+                que.emplace(next,depth+1);
+            }
+            for (int i = 1; i < 5; i++) {
+                auto next = moveLock(temp, i);
+                que.emplace(next,depth+1);
+            }
+        }
+        return -1;
+    }
+    string moveLock(string s1, int posandPN) {
+        //由于实际上是涉及到生存周期的问题，但是实际上好像empalce不用考虑这个
+        if (posandPN > 0 && posandPN <= 4)
+        {
+            if (s1[posandPN-1] == '9') s1[posandPN-1] = '0';
+            else
+                s1[posandPN-1] += 1;
+        }
+            
+        else if (posandPN < 0 && posandPN >= -4) {
+            if (s1[-posandPN-1] == '0') s1[-posandPN-1] = '9';
+            else
+                s1[-posandPN-1] -= 1;
+        }
+            
+        return s1;
+    }
+    // bool containsDeadend(const string& s1, vector<string>& deadends) {
+    //     for (string temp : deadends) {
+    //         if (s1 == temp) return true;
+    //     }
+    //     return false;
+    // }
+};
+```
+
+#### 双向BFS优化
+
+当我们**知道target所在的位置**(基本的前提)的时候，我们可以使用双向的BFS策略，也就是target搜索begin，begin搜索starget同时进行，这样的方式在时间效率上会快的，原因如下：
+
+**传统的 BFS 框架就是从起点开始向四周扩散，遇到终点时停止；而双向 BFS 则是从起点和终点同时开始扩散，当两边有交集的时候停止**。
+
+<img src="${NoteImage}/image-20210210201817896.png" alt="image-20210210201817896" style="zoom:50%;" />
+
+综上所述，这样的算法只能在打开转盘锁的时候使用，因为我们知道终点在哪里，但是这样就设计到一个问题，就是我们好像不能再使用队列了，我们需要用set来判断我们是否产生了交集？
+
+- 使用unorder_set结构
+- 交替更新，但是这里的方法没有delete，我感觉还是多少有泄露的可能性，感觉还是要修改后再使用，但是基本思路还是比较清楚的。应该把new改成clear，然后再换把。
+
+基本的框架如下：
+
+```c++
+int openLock(String[] deadends, String target) {
+    Set<String> deads = new HashSet<>();
+    for (String s : deadends) deads.add(s);
+    // 用集合不用队列，可以快速判断元素是否存在
+    Set<String> q1 = new HashSet<>();
+    Set<String> q2 = new HashSet<>();
+    Set<String> visited = new HashSet<>();
+
+    int step = 0;
+    q1.add("0000");
+    q2.add(target);
+
+    while (!q1.isEmpty() && !q2.isEmpty()) {
+        // 哈希集合在遍历的过程中不能修改，用 temp 存储扩散结果
+        Set<String> temp = new HashSet<>();
+
+        /* 将 q1 中的所有节点向周围扩散 */
+        for (String cur : q1) {
+            /* 判断是否到达终点 */
+            if (deads.contains(cur))
+                continue;
+            if (q2.contains(cur))
+                return step;
+            visited.add(cur); // 实际上原节点都可以不用加，第一次重叠一定是在扩散之后的值和另一个集有重叠的时候把。
+
+            /* 将一个节点的未遍历相邻节点加入集合 */
+            for (int j = 0; j < 4; j++) {
+                String up = plusOne(cur, j);
+                if (!visited.contains(up))
+                    temp.add(up);
+                String down = minusOne(cur, j);
+                if (!visited.contains(down))
+                    temp.add(down);
+            }
+        }
+        /* 在这里增加步数 */
+        step++;
+        // temp 相当于 q1
+        // 这里交换 q1 q2，下一轮 while 就是扩散 q2
+        q1 = q2;
+        q2 = temp;
+    }
+    return -1;
+}
+```
+
+对于双向的BFS，还有一个优化是，我们下一次的扩散方向是根据现在集合比较小的那个来扩散的。
+
+#### 滑动谜题
+
+利用BFS来进行暴力穷举，我们只需要每次找到0的位置，然后和上面一样，列出0能做的所有单步决策就行了，然后用队列和防止重复的方法来解决他，但是其中有一些小技巧值得我们学习：
+
+- 直接列出所有情况下可选择的邻居来加快算法的速度
+- 将2维降维到1维，用string或者其他的一维向量去做会更方便一点。
+
+```c++
+int slidingPuzzle(vector<vector<int>>& board) {
+    int m = 2, n = 3;
+    string start = "";
+    string target = "123450";
+    // 将 2x3 的数组转化成字符串
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            start.push_back(board[i][j] + '0');
+        }
+    }
+    // 记录一维字符串的相邻索引
+    vector<vector<int>> neighbor = {
+        { 1, 3 },
+        { 0, 4, 2 },
+        { 1, 5 },
+        { 0, 4 },
+        { 3, 1, 5 },
+        { 4, 2 }
+    };
+
+    /******* BFS 算法框架开始 *******/
+    queue<string> q;
+    unordered_set<string> visited;
+    q.push(start);
+    visited.insert(start);
+
+    int step = 0;
+    while (!q.empty()) {
+        int sz = q.size();
+        for (int i = 0; i < sz; i++) {
+            string cur = q.front(); q.pop();
+            // 判断是否达到目标局面
+            if (target == cur) {
+                return step;
+            }
+            // 找到数字 0 的索引
+            int idx = 0;
+            for (; cur[idx] != '0'; idx++);
+            // 将数字 0 和相邻的数字交换位置
+            for (int adj : neighbor[idx]) {
+                string new_board = cur;
+                swap(new_board[adj], new_board[idx]);
+                // 防止走回头路
+                if (!visited.count(new_board)) {
+                    q.push(new_board);
+                    visited.insert(new_board);
+                }
+            }
+        }
+        step++;
+    }
+    return -1;
+    /******* BFS 算法框架结束 *******/
+}
+```
+
 
 
 ### 排序算法：
@@ -4285,7 +4489,7 @@ public:
 };
 ```
 
-
+#### 排序搜索统计算法（时间效率那一节）
 
 ## 《LeetCode》
 
@@ -4454,6 +4658,10 @@ public:
 
 1. 通常情况下内容覆盖这种操作应该是不被允许的把，但是it depends,比如18题就是这样去实现的
 2. 到底是把原指针delete掉来作为删除的凭据，还是直接指向nullptr，在原本的一开始的题目中，好像都是指向了nullptr，但是又有遇到一些是需要delete的。后续总结一下
+
+
+
+
 
 ## 顺带GIT知识扩充（后续迁移）
 
