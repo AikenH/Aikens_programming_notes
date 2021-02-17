@@ -48,6 +48,10 @@ vector<vector<int>> vec(size1,vector<int>(size2,defaultvalue));
 1. **set**: `*it`即可；
 2. **map：**`*it`取的应该是value，**key**的话通过 `it->first`来取值，**value**通过`it->second`
 
+### 是否存在键值
+
+使用`.count`不要再用find和end了，那个估计时间成本特别高了。。。。怎么更慢了
+
 ## Pair 二元元组对
 
 ### 二元tuple类型
@@ -73,6 +77,16 @@ newtypeName Data2;
 ```
 
 实际上再DP中也是比较常见的，因为有一些情况下需要额外的信息存储就会使用这个类型。
+
+## String & char 字符串
+
+### 一些常用的函数
+
+strcpy：将stringA 的值复制到stringB
+
+strcat：直接用+就行了
+
+
 
 ## queue队列
 
@@ -127,6 +141,14 @@ swap在实际操作的时候经常被用到，很多时候会被拿来代替删�
 
 1. 初始定义就是交换两个变量之间的赋值，但是在各个数据类型中都存在swap的特化方程，所以**根据该特化执行**的情况下，等价于`varA.swap(varB)`，会交换其中的所有值；
 2. 通过基本的定义也能实现vector中两个不同index下的值的交换；
+
+## 位操作运算
+
+[参考资料](https://blog.csdn.net/cyuyan112233/article/details/40758031) `^`异或；`~`取反；`|`或；`&` 与。
+
+位运算符的优先级从高到低，依次为~、&、^、|。
+
+
 
 ## Exception 异常处理
 

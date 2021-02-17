@@ -7,7 +7,6 @@
 #include<unordered_map>
 #include<unordered_set>
 #include<string>
-#include<stack>
 #include<queue>
 #include<set>
 using namespace std;
@@ -29,7 +28,24 @@ struct ListNode {
 // -----------------------------------------question--------------------------
 
 // -----------------------------------------ans--------------------------------
-
+class Solution {
+private:
+   int maxd = 0;
+public:
+   int maxDepth(TreeNode* root) {
+      if(!root) return 0;
+      helpmax(root,0);
+      return maxd;
+   }
+   void helpmax(TreeNode* root, int depth){
+      if(!root){
+         maxd = max(maxd, depth);
+         return;
+      }
+      helpmax(root->left,depth+1);
+      helpmax(root->right,depth+1);
+   }
+};
 // -----------------------------------------test--------------------------------
 // 在这个地方编写测试样例并进行测试；
 int main()
