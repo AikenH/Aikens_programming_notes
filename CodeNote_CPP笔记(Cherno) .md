@@ -2659,3 +2659,5 @@ sort(envelopes.begin(), envelopes.end(),
 
 上面是对一个二维的动态数组进行排序的方法，使用自己编写的lambda对比函数，其中return的是A在B前面的bool判断。
 
+
+

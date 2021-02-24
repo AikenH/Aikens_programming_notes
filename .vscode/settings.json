@@ -16,5 +16,6 @@
         "utility": "cpp",
         "istream": "cpp",
         "set": "cpp"
-    }
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
 }

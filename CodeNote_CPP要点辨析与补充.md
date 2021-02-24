@@ -29,7 +29,7 @@ vector<vector<char>> value = {{'5','3','.','.','7','.','.','.','.'},{'6','.','.'
 vector<vector<int>> vec(size1,vector<int>(size2,defaultvalue));
 ```
 
-## Unordered_map & Unordered_set
+## Unordered_map&set哈希结构
 
 ### CPP中hash table的实现数据类型：
 
@@ -50,7 +50,18 @@ vector<vector<int>> vec(size1,vector<int>(size2,defaultvalue));
 
 ### 是否存在键值
 
-使用`.count`不要再用find和end了，那个估计时间成本特别高了。。。。怎么更慢了
+使用`.count`不要再用find和end了，那个估计时间成本特别高了。。。。怎么更慢了。
+
+使用map[key] 可以访问键对应的值，但是如果Key不存在，cpp会自动创建这个key同时赋值为0；
+
+## List 双向链表like
+
+通常用[list](https://zh.cppreference.com/w/cpp/container/list)来实现类似双向链表的类型，基本的使用上好像和其他的容器没什么区别，没有index索引，可能需要用iteration来进行遍历操作，
+
+- 和双向队列相同，可以在两端添加和删除，pop push emplace也就是有\_back和\_front的后缀。
+- 自带reverse，可以将元素的顺序反转；
+- unique可以删除连续的重复元素；
+- sort自带排序算法；
 
 ## Pair 二元元组对
 
@@ -86,8 +97,6 @@ strcpy：将stringA 的值复制到stringB
 
 strcat：直接用+就行了
 
-
-
 ## queue队列
 
 实际上就是队列数据结构的CPP实现，基本的特征和队列的要求是一致的，常在BFS中使用到。
@@ -97,6 +106,33 @@ strcat：直接用+就行了
 1. `front/back`：访问首/尾元素;
 2. `push/emplace/pop`: 在末尾插入/构造数据；弹出队首数据；
 3. `swap`：交换内容（还没尝试过使用的方式）;
+
+### Deque双端队列
+
+有下标顺序的容器，允许在首尾两端快速插入和删除，相比于原本的普通队列，元素访问上没什么区；主要的区别在于
+
+1. pop、emplace、push都变成了两种形式：`pop_back\ pop_front` ...etc.
+
+### Priority_queue优先队列
+
+[参考资料](https://blog.csdn.net/weixin_36888577/article/details/79937886) “例如，用 std::greater<T> 将导致最小元素作为 [top()](https://zh.cppreference.com/w/cpp/container/priority_queue/top) 出现。”
+
+### Usage 基本使用方式
+
+```cpp
+priority_queue<type, container, compare>
+存放的数据类型，底层的容器类型，比较方程
+```
+
+基本的使用 
+
+```cpp
+top
+push、pop、emplace
+swap
+```
+
+
 
 ## set/multiset 堆相关的数据类型
 
@@ -123,7 +159,7 @@ strcat：直接用+就行了
 
 :question:但是这里目前有一个问题就是他这里介绍的使用方式来建立最大值和最下值堆，和我个人理解的不太一样，我们需要去后面辨析一下到底是怎么样才是对的。
 
-✅应该和我理解的是一眼的，less最终就会是升序排列的，greater就会是降序排列的集合，然后只要我们在下面的pop或者push中指定一样的compare function就行。
+应该和我理解的是一眼的，less最终就会是升序排列的，greater就会是降序排列的集合，然后只要我们在下面的pop或者push中指定一样的compare function就行。不，和我理解的是相反的
 
 #### push_heap & pop_heap堆元素的添加和删除
 
@@ -147,6 +183,10 @@ swap在实际操作的时候经常被用到，很多时候会被拿来代替删�
 [参考资料](https://blog.csdn.net/cyuyan112233/article/details/40758031) `^`异或；`~`取反；`|`或；`&` 与。
 
 位运算符的优先级从高到低，依次为~、&、^、|。
+
+### 基本的一些操作Tips
+
+根据剑指offer后面的两道题，我们可以分析一下怎么做到按位来进行操作
 
 
 
@@ -205,7 +245,9 @@ try {
 }
 ```
 
+## Printf 按照format输出
 
+#inlcude<cstdio>
 
-
+参考cpp reference进行基本的学习吧，实际上
 

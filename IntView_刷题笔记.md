@@ -31,6 +31,81 @@
 >
 > **链表**因为元素不连续，而是靠指针指向下一个元素的位置，所以不存在数组的扩容问题；如果知道某一元素的前驱和后驱，操作指针即可删除该元素或者插入新元素，时间复杂度 O(1)。但是正因为存储空间不连续，你无法根据一个索引算出对应元素的地址，所以不能随机访问；而且由于每个元素必须存储指向前后元素位置的指针，会消耗相对更多的储存空间。
 
+### 二分查找专题
+
+由于我经常写错二分查找的边界判断条件，所以这里进行一个整理操作：
+
+[二分查找总结专题](https://mp.weixin.qq.com/s?__biz=MzAxODQxMDM0Mw==&mid=2247485044&idx=1&sn=e6b95782141c17abe206bfe2323a4226&chksm=9bd7f87caca0716aa5add0ddddce0bfe06f1f878aafb35113644ebf0cf0bfe51659da1c1b733&scene=21#wechat_redirect)  后续整理的时候在进行阅读一下，加深一下理解
+
+其中需要注意的是：
+
+- 我们使用 left+(right-left) /2 来代替 (l+r)/2 ,因为这样的话可以防止right和left太大溢出的操作；
+- mid +- 1 以及最终的返回条件 <= 还是小于
+
+我们分情况来讨论：
+
+求的是特定值，求的是左右的边界值的时候，
+
+```cpp
+int binary_search(int[] nums, int target) {
+    int left = 0, right = nums.length - 1; 
+    while(left <= right) {
+        int mid = left + (right - left) / 2;
+        if (nums[mid] < target) {
+            left = mid + 1;
+        } else if (nums[mid] > target) {
+            right = mid - 1; 
+        } else if(nums[mid] == target) {
+            // 直接返回
+            return mid;
+        }
+    }
+    // 直接返回
+    return -1;
+}
+
+int left_bound(int[] nums, int target) {
+    int left = 0, right = nums.length - 1;
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        if (nums[mid] < target) {
+            left = mid + 1;
+        } else if (nums[mid] > target) {
+            right = mid - 1;
+        } else if (nums[mid] == target) {
+            // 别返回，锁定左侧边界
+            right = mid - 1;
+        }
+    }
+    // 最后要检查 left 越界的情况
+    if (left >= nums.length || nums[left] != target)
+        return -1;
+    return left;
+}
+
+
+int right_bound(int[] nums, int target) {
+    int left = 0, right = nums.length - 1;
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        if (nums[mid] < target) {
+            left = mid + 1;
+        } else if (nums[mid] > target) {
+            right = mid - 1;
+        } else if (nums[mid] == target) {
+            // 别返回，锁定右侧边界
+            left = mid + 1;
+        }
+    }
+    // 最后要检查 right 越界的情况
+    if (right < 0 || nums[right] != target)
+        return -1;
+    return right;
+}
+```
+
+
+
 ### 数据结构的基本操作
 
 所有数据结构的基本操作一般都局限在 **遍历+访问**，更具体一点就是：**增删改查**；
@@ -91,6 +166,216 @@ void traverse(TreeNode root) {
     // oprtator 后序遍历
 }
 ```
+
+### 更好的理解数据类型的作用
+
+#### 设计twitter 335
+
+从题目需求出发，更好的理解各种数据结构的使用情景：
+
+- 不需要时序，需要快速搜索的关注列表：Hashset，set，...
+
+- 需要发表的时序，同时需要多个用户推文发表的时间顺序，也涉及到顺序的整合：有序链表
+
+  > 同时考虑一个全局的时间戳来进行比对。（合并k个有序链表）
+
+- 合并k个有序链表：借助优先级队列，设定好优先级队列的优先关系（timestamp），它能够实现自动排序，然后我们讲k个链表插进去，就行。
+
+面向对象设计，针对每个对象的需求来定制需要的数据类型和方法；当然也要考虑基类和子类之间的关系，还有private 和 static的关系。
+
+具体的代码实现后面还是要看一下的，这种比较复杂的类型设计题目。
+
+#### 单调栈模板
+
+实际上就是栈，利用了一些巧妙的规则，使得新元素入栈后，栈内的元素都保持有序（单增或者单减）。Purpose：如何设计这样一个数据结构，同时如何利用这样的数据结构来解题。
+
+##### **496 下一个更大的元素**
+
+**反向写更好，不要执着了，学起来就完事了**
+
+这题我对题意的理解是错误的，下一个更大的元素，不是按照大小排列的，而是按照原本在数组中的顺序排列的，所以我们实际上可以用一个hash映射来做这样的题目，官方题解中队单调栈的讲解更清晰一点，
+
+这个是网址中写的，这样的方法是倒着完成的，基本的概念是差不多的，也就是遍历的顺序和判定的条件稍微变换了一下：
+
+```cpp
+vector<int> nextGreaterElement(vector<int>& nums) {
+    vector<int> res(nums.size()); // 存放答案的数组
+    stack<int> s;
+    // 倒着往栈里放
+    for (int i = nums.size() - 1; i >= 0; i--) {
+        // 判定个子高矮
+        while (!s.empty() && s.top() <= nums[i]) {
+            // 矮个起开，反正也被挡着了。。。
+            s.pop();
+        }
+        // nums[i] 身后的 next great number
+        res[i] = s.empty() ? -1 : s.top();
+        // 
+        s.push(nums[i]);
+    }
+    return res;
+}
+```
+
+下面这个是我写的，我是正向执行的。
+
+```cpp
+class Solution {
+public:
+    vector<int> nextGreaterElement(vector<int>& nums1, vector<int>& nums2) {
+        int n = nums2.size();
+        unordered_map<int,int>orderh; // 这个没有长度初始化这种说法的
+        stack<int> temps;
+        vector<int> res; // 只初始化长度的话，会初始化为0；
+        temps.push(nums2[0]);
+        // 当遇到比原本的大的时候，我们就直接弹出，直到里面的都比他大
+        for(int i =1; i<n; i++){
+            while(!temps.empty() && nums2[i]>temps.top()){
+                orderh[temps.top()] = nums2[i];
+                temps.pop();
+            }
+            temps.push(nums2[i]);
+        }
+        // 对于剩下来的哪些元素，就赋值为-1
+        while(!temps.empty()){
+            orderh[temps.top()] = -1;
+            temps.pop();
+        }
+        // 添加进最终的结果。
+        for(int num: nums1){
+            res.push_back(orderh[num]);
+        }
+        return res;
+
+    }
+};
+```
+
+##### 问题变形，1118等待多少天
+
+![image-20210221121356731](${NoteImage}/image-20210221121356731.png)
+
+这一题，求间隔，我们就讲放入stack的值变成相应的index，然后根据index去索引值来对比，然后通过，相似的操作去求解，但是我们当然也可以反向的进行操作，因为我们现在的num1和num2是相等的，我们就没必要建立hash去索引求解，只需要直接输出答案即可。
+
+- 可以像上一题我的写法一样，只需要修改存入stack的值就可以；
+- 也可以反向进行，如下：
+
+```cpp
+vector<int> dailyTemperatures(vector<int>& T) {
+    vector<int> res(T.size());
+    // 这里放元素索引，而不是元素
+    stack<int> s; 
+    /* 单调栈模板 */
+    for (int i = T.size() - 1; i >= 0; i--) {
+        while (!s.empty() && T[s.top()] <= T[i]) {
+            s.pop();
+        }
+        // 得到索引间距
+        res[i] = s.empty() ? 0 : (s.top() - i); 
+        // 将索引入栈，而不是元素
+        s.push(i); 
+    }
+    return res;
+}
+```
+
+反正基本思想都是让stack里存放的值从大到小，如果违反了就pop到符合位置。
+
+##### 503 下一个更大的元素2
+
+如何处理环形数组：也就是他能绕一圈的，进行操作的。
+
+- 使用**取余**来得到相应的环形特性，但是我们其中已经存在的答案怎么fix呢？
+
+- 也可以使用**双倍长度**的解法,构建或者不构建新数组。
+
+一般的通过取余获得环形特效的代码模板：
+
+```cpp
+int[] arr = {1,2,3,4,5};
+int n = arr.length, index = 0;
+while (true) {
+    print(arr[index % n]);
+    index++;
+}
+```
+
+具体实现：通过取余来模拟双倍长度，但是这样的作法，实际上还是进行了重复的计算吧？正向的写也没问题
+
+```cpp
+class Solution {
+public:
+    vector<int> nextGreaterElements(vector<int>& nums) {
+        int n = nums.size();
+        vector<int> res(n);
+        stack<int> s;
+        // 假装这个数组长度翻倍了
+        for (int i = 2 * n - 1; i >= 0; i--) {
+            // 索引要求模，其他的和模板一样
+            while (!s.empty() && s.top() <= nums[i % n])
+                s.pop();
+            res[i % n] = s.empty() ? -1 : s.top();
+            s.push(nums[i % n]);
+        }
+        return res;
+    }
+};
+```
+
+#### 单调队列
+
+实际上就是和上面一样的思路，剑指offer的队列中的最大值，用一个deque双向队列实现，刚好是剑指offer59题。维护一个头部是最大值的队列，后续的加入的时候，将前边比他小的都pop出去，再push，然后每次移动要把头pop出去。
+
+[FA讲解的，结合offer理解更妙](https://mp.weixin.qq.com/s?__biz=MzAxODQxMDM0Mw==&mid=2247488087&idx=1&sn=673aa4e8deb942b951948650928c336e&chksm=9bd7ec5faca06549ba6176540fef04f93c1c9f55b303106688b894a2029e00b8cce1a9ba57a4&scene=21#wechat_redirect)
+
+#### 二叉堆实现优先队列
+
+实际上就是用数组维护的一个类似的二叉树，然后要保有最大堆或者最小堆的性质，数组的子节点可以很容易的通过*2来获取：
+![image-20210221124352329](${NoteImage}/image-20210221124352329.png)
+
+然后为了维护最大堆或者最小堆的操作，我们需要有一个`上浮``下沉`两个操作来维护最大堆的性质，实际上也比较简单。就是
+
+- 上浮：当父节点小于当前节点的时候就不断向上换
+- 下沉：下面更大的哪个和父节点换。
+
+通过这两个操作来实现删除和添加的维护：
+
+- insert：添加到底部不断上浮即可
+- delete：将堆顶元素和堆底元素互换，（1，N）然后将堆顶的元素不断的下沉到正确的地方即可
+
+这些操作都是二分的时间复杂度。
+
+#### hash和数组实现O(1)插入删除和随机数
+
+通常理解的情况下我们需要依靠hash来实现O(1)的搜索和插入删除，但是，这样的话，我们没法等概率的取出随机数，我们认为需要借助index，产生一个随机的数字来索引，但是这样，我们就需要借助vector，那如何通过底层的vector来进行删除？
+
+使用hash来存储index，然后通过swap和pop来O(1)的删除，然后调用rand()和%来产生随机数即可。
+
+**进阶问题**
+
+排除黑名单数字来产生随机数，这样我们只需要将黑名单里的数字移动到数组的末尾再产生随机数就可以了，但是有两个需要注意的地方：
+
+- 黑名单里的数字本来就在末尾
+- 交换的时候黑名单的数字和黑名单里的数字交换了，（实际上他通过限定次数的交换是没有问题的，按顺序还过去就好）
+
+```cpp
+ 跳过尾部的黑名单缩影的问题
+int last = N - 1;
+        for (int b : blacklist) {
+            // 如果 b 已经在区间 [sz, N)
+            // 可以直接忽略
+            if (b >= sz) {
+                continue;
+            }
+            while (mapping.count(last)) {
+                last--;
+            }
+            mapping[b] = last;
+            last--;
+        }
+```
+
+
 
 ### 链表刷题
 
@@ -3794,9 +4079,411 @@ int slidingPuzzle(vector<vector<int>>& board) {
 }
 ```
 
+### 双指针使用技巧总结
+
+[双指针技巧使用汇总帖](https://mp.weixin.qq.com/s?__biz=MzAxODQxMDM0Mw==&mid=2247484505&idx=1&sn=0e9517f7c4021df0e6146c6b2b0c4aba&chksm=9bd7fa51aca07347009c591c403b3228f41617806429e738165bd58d60220bf8f15f92ff8a2e&scene=21#wechat_redirect)
+
+#### 快慢指针的用法和用途：
+
+1. 是否有环：相遇可以判定有环；
+2. 找到环的起始点：相遇后，把一个调到头，同速前进，再次相遇即是起始点。
+3. 链表的中点：快慢指针，快指针到达终点。
+   延申问题：对链表进行归并排序，通过快慢指针实现二分的操作，合并两个有序链表。
+4. 起始点偏差：先让一个指针走k步，另一个指针再出发，寻找链表的倒数第k个元素
+
+#### 快慢指针的常用算法：
+
+1. 二分查找算法，没啥好说的
+2. 子数组之和：只要**数组有序**，就要想到双指针技巧。通过调节left和right来调整sum的大小。找到对应的区间
+3. 反转数组：从前或从后出发，然后直接互换。
+4. 下面讲的滑动窗口
+
+#### 双指针技巧例题：
+
+26 & 83有序数组链表去重
+
+使用快慢指针，遇到不一样的时候往下一个赋值就可以了，链表的话就是修改一下赋值操作，没什么太大的区别。
+
+27  移除元素
+
+使用双指针技巧，从两端向内，找到不是val的和val交换即可。
+
+```cpp
+class Solution {
+public:
+    int removeElement(vector<int>& nums, int val) {
+        if(nums.empty()) return {};
+        int n = nums.size();
+        int be = 0, en =n-1;
+        // 使用双指针法解决这个问题，也就是不一样的时候进行交换
+        while(be<=en){
+            if(nums[be]!=val){
+                ++be;
+            }
+            else if(nums[en]==val){
+                --en;
+            }
+            else{
+                swap(nums[be],nums[en]);
+            }
+        }
+        return en+1;
+    }
+};
+```
+
+移动0：283 
+
+这题要注意是进行删除，然后再后面添加0，和之前的交换不一样，交换会破坏顺序。
+
+```cpp
+class Solution {
+public:
+    void moveZeroes(vector<int>& nums) {
+        if(nums.empty()) return ;
+        int n = nums.size();
+        int slow=0, fast =0;
+        // 使用双指针法解决这个问题，也就是不一样的时候进行交换
+        while(fast<n){
+            if(nums[fast]!=0){
+                nums[slow] = nums[fast];
+                if(slow != fast) nums[fast] =0;
+                ++slow;
+            }
+            fast++;
+        }
+    }
+};
+
+```
 
 
-### 排序算法：
+
+### 滑动窗口算法
+
+#### 思路总结
+
+[链表子串数组题](https://mp.weixin.qq.com/s?__biz=MzAxODQxMDM0Mw==&mid=2247485141&idx=1&sn=0e4583ad935e76e9a3f6793792e60734&chksm=9bd7f8ddaca071cbb7570b2433290e5e2628d20473022a5517271de6d6e50783961bebc3dd3b&scene=21#wechat_redirect)：就直接考虑双指针的方法去做，双指针基本可以总结成以下的3中类型。
+
+1. **快慢指针**：链表操作，归并排序找中点，链表成环搞判定；
+2. **左右指针**：反转数组，二分搜索
+3. **滑动窗口**：字串问题，左右指针滑动，前后并进
+
+#### 滑动窗口的基本框架
+
+***1、***我们在字符串`S`中使用双指针中的左右指针技巧，初始化`left = right = 0`，**把索引左闭右开区间`[left, right)`称为一个「窗口」**。
+
+***2、***我们先不断地增加`right`指针扩大窗口`[left, right)`，直到窗口中的字符串符合要求（包含了`T`中的所有字符）。
+
+***3、***此时，我们停止增加`right`，转而不断增加`left`指针缩小窗口`[left, right)`，直到窗口中的字符串不再符合要求（不包含`T`中的所有字符了）。同时，每次增加`left`，我们都要更新一轮结果。
+
+***4、***重复第 2 和第 3 步，直到`right`到达字符串`S`的尽头。
+
+理解向：思想很简单，但是主要是逻辑上容易出现一些bug和问题：1. 如何添加缩小，2.在哪更新结果
+
+```c++
+int left = 0, right = 0;
+
+while (right < s.size()) {
+    // 增大窗口
+    window.add(s[right]);
+    right++;
+
+    while (window needs shrink) {
+        // 缩小窗口
+        window.remove(s[left]);
+        left++;
+    }
+}
+```
+
+实现向：具体实现的框架，考虑了边界问题的方法，实际上也没什么说嘛，就是更具体一点，输入操作的位置肯定是这样啊，没什么好说的。
+
+```c++
+/* 滑动窗口算法框架 */
+void slidingWindow(string s, string t) {
+    unordered_map<char, int> need, window;
+    for (char c : t) need[c]++; // 初始化状态，便于搜索
+
+    int left = 0, right = 0;
+    int valid = 0;  // 统计满足情况的数有多少，和需要的匹配时更新答案
+    while (right < s.size()) {
+        // c 是将移入窗口的字符
+        char c = s[right];
+        // 右移窗口
+        right++;
+        // 进行窗口内数据的一系列更新
+        ...
+
+        /*** debug 输出的位置 ***/
+        printf("window: [%d, %d)\n", left, right);
+        /********************/
+
+        // 判断左侧窗口是否要收缩
+        while (window needs shrink) {
+            // d 是将移出窗口的字符
+            char d = s[left];
+            // 左移窗口
+            left++;
+            // 进行窗口内数据的一系列更新
+            ...
+        }
+    }
+}
+```
+
+#### 典型例题1：76
+
+最小覆盖子串问题，思路分析：
+
+1. 不断的右移扩大窗口，当满足条件以后左指针右移，优化结果，直到第一次不满足，每次移动左指针都更新答案。
+2. 直到右指针超出边缘以后结束。
+
+实现上由于是第一题，给出代码，但是后面的题就到相应的代码文件中去找吧：
+
+```cpp
+class Solution {
+public:
+    string minWindow(string s, string t) {
+        if(s.empty() || s.size()<t.size()) return {};
+        unordered_map<char,int> need,windows; 
+        for(char temp: t) need[temp]++; //存储所有需要的字符
+        
+        // 初始化双指针和判断指针
+        int right=0, left=0;
+        int valid =0; int n = need.size(); 
+        // 存放结果
+        int len = INT_MAX; int s_index = 0;
+        
+        while(right<s.size()){
+            char c = s[right];
+            right++;
+            if(need.count(c)){
+                windows[c]++;
+                // 考虑到重复数值的出现
+                if(windows[c] == need[c])
+                    valid++;
+            }
+            while(valid == need.size()){
+                if(right-left<len){
+                    s_index = left;
+                    len = right-left;
+                }
+                char d = s[left];
+                left++;
+                if(need.count(d)){
+                    // 考虑到有多个对应元素，而我们pop的时候只有当临界值需要修改状态
+                    if(windows[d]== need[d])
+                        valid--;
+                    windows[d]--;
+                }
+            }
+        }
+        return len==INT_MAX?"":s.substr(s_index,len);
+
+    }
+};
+```
+
+#### 典型例题：567字符串排列
+
+这题和上面一题的区别就在于“**只**包含需要的所有元素” ，并且计数一致
+
+这题我的思路是直接不断移动right，然后当right遍历到不同的元素的时候，或者需要元素的count不同的时候，直接--，但是这样实际上还是有一定的问题的，比如对于windows中的元素--实际上并不好操作。但是这个思路的计算和遍历思路实际上比框架的快，也不一定，因为要遍历--；
+
+FA：右侧递进实际上还是一样的，但是左侧应该是当size不同的时候，要一直遍历到相等。因为是排列，所以长度要想等
+
+**因为这里用的是小于等于的时候都要进入循环，所以第一次发生判断的时候只可能是长度相等的时候。**
+
+#### 典型例题：438所有的排列
+
+和上一题一样，只是要存储所有的start，所以判断的热res修改一下就好了。
+
+#### 典型例题：3 最小不重复子串
+
+实际上就是终止条件（left），每个字符的count都只有1，不然就left一直++；
+
+然后更新就行maxlen就行。
+
+### 分治算法详解
+
+FA的作者认为可以将回溯，分治和动态规划放到一起，实际上都是一种特殊的递归。
+
+>回溯算法就一种简单粗暴的算法技巧，说白了就是一个暴力穷举算法，比如让你 用回溯算法求[子集、全排列、组合](http://mp.weixin.qq.com/s?__biz=MzAxODQxMDM0Mw==&mid=2247485007&idx=1&sn=ceb42ba2f341af34953d158358c61f7c&chksm=9bd7f847aca071517fe0889d2679ead78b40caf6978ebc1d3d8355d6693acc7ec3aca60823f0&scene=21#wechat_redirect)，你就穷举呗，就考你会不会漏掉或者多算某些情况。 
+>
+>动态规划是一类算法问题，肯定是让你求最值的。因为动态规划问题拥有 [最优子结构](http://mp.weixin.qq.com/s?__biz=MzAxODQxMDM0Mw==&mid=2247484832&idx=1&sn=44ad2505ac5c276bf36eea1c503b78c3&chksm=9bd7fba8aca072be32f66e6c39d76ef4e91bdbf4ef993014d4fee82896687ad61da4f4fc4eda&scene=21#wechat_redirect)，可以通过状态转移方程从小规模的子问题最优解推导出大规模问题的最优解。
+>
+>分治算法呢，可以认为是一种算法思想，通过将原问题分解成小规模的子问题，然后根据子问题的结果构造出原问题的答案。这里有点类似动态规划，所以说运用分治算法也需要满足一些条件，你的原问题结果应该可以通过合并子问题结果来计算。
+
+最经典的分支框架，归并排序：
+
+```cpp
+void sort(int[] nums, int lo, int hi) {
+    int mid = (lo + hi) / 2;
+    /****** 分 ******/
+    // 对数组的两部分分别排序
+    sort(nums, lo, mid);
+    sort(nums, mid + 1, hi);
+    /****** 治 ******/
+    // 合并两个排好序的子数组
+    merge(nums, lo, mid, hi);
+}
+```
+
+#### 为运算表达式设计优先级241
+
+实际上就是考虑所有可能的添加括号的方式，还要考虑括号的合法性和计算的优先级问题；
+
+实际上没有我们考虑的那么复杂，当我们只加一个括号的时候，我们只需要针对单一的运算符号进行分割就好了，其他的情况都是可以被归化的，
+
+实际上也没什么特殊的操作，就是通过分和治两部分进行，用分划分成子问题，然后对当前的问题进行解决，这实际上也就是递归做的事情啊，感觉没什么区别，对于特殊的问题实际上也可以使用备忘录来简化操作。
+
+下面这个我写的代码，值得品一品好吧。
+
+```cpp
+class Solution {
+public:
+    vector<int> diffWaysToCompute(string input) {
+        vector<int> res;
+        int n = input.size();
+        vector<int>a; vector<int>b;
+        for(int i = 0; i<n;i++){
+            char c = input[i];
+            if(c=='*' || c=='+' || c=='-'){
+                a = diffWaysToCompute(input.substr(0,i));
+                b = diffWaysToCompute(input.substr(i+1,n-i-1));
+                // 由于我们已经有了c所以我们通过这个定义一个运算
+                for(int nums1:a){
+                    for(int nums2:b){
+                        int temp = calculate(nums1,nums2,c);
+                        res.emplace_back(temp);
+                    }
+                }
+            }
+            
+        }
+        // basecase!!! 当我们发现里面没有运算符的时候，就说明这是一个单纯的数字
+        if(res.empty()){
+            res.emplace_back(stoi(input));
+        }
+        return res;
+
+    }
+    int calculate(const int& num1, const int& num2, char& op){
+        if(op=='+'){
+            return num1+num2;
+        }else if(op=='-'){
+            return num1-num2;
+        }else if(op=='*'){
+            return num1*num2;
+        }
+        return {};
+    }
+};
+```
+
+
+
+### 区间问题
+
+所谓区间问题也就是线段问题，合并所有的线段，找出线段的交集等等。主要有两个技巧
+
+- 排序：常见的有，按照起点升序排序，若起点相同，则按照终点降序排序。
+- 画图：不要偷懒。
+
+#### 典型例题 1288 删除被覆盖区间
+
+这题有个问题我比较疑惑，就是区间竟然还能合并的嘛，fine。解决思路就是，通过起点升序，末端降序，然后首先排除覆盖，遇到区间合并的情况，就更新边界点（left，right），遇到完全不相交的情况，就重新（left，right）；
+
+实际上有类似的问题涉及到贪心的算法选择。
+
+```cpp
+int removeCoveredIntervals(int[][] intvs) {
+    // 按照起点升序排列，起点相同时降序排列
+    Arrays.sort(intvs, (a, b) -> {
+        if (a[0] == b[0]) {
+            return b[1] - a[1];
+        }
+        return a[0] - b[0]; 
+    });
+
+    // 记录合并区间的起点和终点
+    int left = intvs[0][0];
+    int right = intvs[0][1];
+
+    int res = 0;
+    for (int i = 1; i < intvs.length; i++) {
+        int[] intv = intvs[i];
+        // 情况一，找到覆盖区间
+        if (left <= intv[0] && right >= intv[1]) {
+            res++;
+        }
+        // 情况二，找到相交区间，合并
+        if (right >= intv[0] && right <= intv[1]) {
+            right = intv[1];
+        }
+        // 情况三，完全不相交，更新起点和终点
+        if (right < intv[0]) {
+            left = intv[0];
+            right = intv[1];
+        }
+    }
+
+    return intvs.length - res;
+}
+```
+
+#### 典型题 56 区间合并
+
+实际上也是按照开始的节点升序排列，后面其实升序降序都可以，按照start和现有的end的关系，看到底是要修改end还是push_back。即可。
+
+```cpp
+# intervals 形如 [[1,3],[2,6]...]
+def merge(intervals):
+    if not intervals: return []
+    # 按区间的 start 升序排列
+    intervals.sort(key=lambda intv: intv[0])
+    res = []
+    res.append(intervals[0])
+
+    for i in range(1, len(intervals)):
+        curr = intervals[i]
+        # res 中最后一个元素的引用
+        last = res[-1]
+        if curr[0] <= last[1]:
+            # 找到最大的 end
+            last[1] = max(last[1], curr[1])
+        else:
+            # 处理下一个待合并区间
+            res.append(curr)
+    return res
+```
+
+#### 典型题 986 区间交集问题
+
+实际上画图很容易找到解决的方案，交集就是max （left） min（right），然后哪个的right小，哪个的index就++，没有别的了。
+
+```cpp
+# A, B 形如 [[0,2],[5,10]...]
+def intervalIntersection(A, B):
+    i, j = 0, 0 # 双指针
+    res = []
+    while i < len(A) and j < len(B):
+        a1, a2 = A[i][0], A[i][1]
+        b1, b2 = B[j][0], B[j][1]
+        # 两个区间存在交集
+        if b2 >= a1 and a2 >= b1:
+            # 计算出交集，加入 res
+            res.append([max(a1, b1), min(a2, b2)])
+        # 指针前进
+        if b2 < a2: j += 1
+        else:       i += 1
+    return res
+```
+
+
+
+### 排序算法
 
 排序算法最少最少也要nlogn （平均和最差）
 
@@ -3866,6 +4553,14 @@ boolean isValidBST(TreeNode root, TreeNode min, TreeNode max) {
 
 ```c++
 // 代码框架，（不是具体实现）
+/* 快速排序主函数 */
+void sort(int[] nums) {
+    // 一般要在这用洗牌算法将 nums 数组打乱，
+    // 以保证较高的效率，我们暂时省略这个细节
+    sort(nums, 0, nums.length - 1);
+}
+
+/* 快速排序核心逻辑 */
 void sort(int[] nums, int lo, int hi) {
     /****** 前序遍历位置 ******/
     // 通过交换元素构建分界点 p
@@ -3876,6 +4571,41 @@ void sort(int[] nums, int lo, int hi) {
     sort(nums, p + 1, hi);
 }
 先构造分界点，然后去左右子数组构造分界点，你看这不就是一个二叉树的前序遍历吗？
+    
+int partition(int[] nums, int lo, int hi) {
+    if (lo == hi) return lo;
+    // 将 nums[lo] 作为默认分界点 pivot
+    int pivot = nums[lo];
+    // j = hi + 1 因为 while 中会先执行 --
+    int i = lo, j = hi + 1;
+    while (true) {
+        // 保证 nums[lo..i] 都小于 pivot
+        while (nums[++i] < pivot) {
+            if (i == hi) break;
+        }
+        // 保证 nums[j..hi] 都大于 pivot
+        while (nums[--j] > pivot) {
+            if (j == lo) break;
+        }
+        if (i >= j) break;
+        // 如果走到这里，一定有：
+        // nums[i] > pivot && nums[j] < pivot
+        // 所以需要交换 nums[i] 和 nums[j]，
+        // 保证 nums[lo..i] < pivot < nums[j..hi]
+        swap(nums, i, j);
+    }
+    // 将 pivot 值交换到正确的位置
+    swap(nums, j, lo);
+    // 现在 nums[lo..j-1] < nums[j] < nums[j+1..hi]
+    return j;
+}
+
+// 交换数组中的两个元素
+void swap(int[] nums, int i, int j) {
+    int temp = nums[i];
+    nums[i] = nums[j];
+    nums[j] = temp;
+}
 ```
 
 #### 归并排序：实际上就是二叉树的后序遍历
@@ -3910,7 +4640,763 @@ void sort(int[] nums, int lo, int hi) {
 
 看书，上网找描述，书上能理解但是描述不清楚。
 
+### 题型：数组
 
+#### 用二分查找来解决数组题目
+
+实际上二分查找法的关键就在这一个查找，针对查找问题的这些情况，我们都可以用二分法去做，有一些题目虽然会写的比较隐晦，但是我们看到类似如下的暴力搜索框架的时候，就可以考虑使用二分查找法来优化
+
+```cpp
+for (int i = 0; i < n; i++)
+    if (isOK(i))
+        return answer;
+```
+
+例题：koko吃香蕉；货物运输
+
+我对于二分查找的框架的写法实际上还是没有太清楚，到底是应该+1-1还是怎么去约束，我还是要想清楚再写，看看FA的二分查找框架。
+
+#### 删除数组中的重复元素316 1081
+
+这一题实际上还是用单调栈的思路，让里面的顺序尽量是按照从小到大排，就是增加了约束，也就是：
+
+- 里面已经有的我们就直接过；
+- 后面没有再出现的情况我们也直接过；
+- 如果是比里面的大就直接加进去，如果是比里面的小，我们就pop到直接过的时候再加
+- 需要两个辅助的存放判断的辅助情况
+
+```cpp
+class Solution {
+public:
+    string removeDuplicateLetters(string s) {
+        if(s.empty()) return {};
+        // 初始化需要的存储数据结构
+        vector<int> countAl(256,0); 
+        vector<bool> countSt(256,false);
+        stack<int> store;
+        // 初始化count数组
+        for(auto t: s){
+            countAl[t]++;
+        }
+        for(char c: s){
+            countAl[c]--;
+            if(countSt[c]) continue;
+            while(!store.empty() && store.top()>c){
+                // 如果top后面没有了
+                if(countAl[store.top()]==0)
+                    break;
+                // 如果还有就pop
+                countSt[store.top()] = false;
+                store.pop();
+            }
+            store.push(c);
+            countSt[c] = true;
+        }
+        // 对stack中的字符进行反转然后输出
+        string res;
+        stack<char> temp;
+        while(!store.empty()){
+            temp.push(store.top());
+            store.pop();
+        }
+        while(!temp.empty()){
+            res.push_back(temp.top());
+            temp.pop();
+        }
+        return res;
+    }
+};
+```
+
+
+
+### Two Sum 到N Sum问题
+
+two sum实际上就是教我们使用hash-table之类的数据结构去解决这样的需要穷举的问题，或者排序后再使用双指针的问题。我们当然也可以在自定义数据结构，每次添加数字，旧纪录当前所有可能的和，然后再O1进行索引就行了。
+
+简单的TWO-SUM就不再多说了，这里提一下如何实现到NSUM的泛化
+
+#### N Sum拓展：
+
+首先基于思路还是用sort首先排完序后再用双指针法去做的，实际上更偏向于其中的滑动窗口算法。
+
+```cpp
+# two sum的基本情况
+vector<vector<int>> twoSumTarget(vector<int>& nums, int target) {
+    // nums 数组必须有序
+    sort(nums.begin(), nums.end());
+    int lo = 0, hi = nums.size() - 1;
+    vector<vector<int>> res;
+    while (lo < hi) {
+        int sum = nums[lo] + nums[hi];
+        int left = nums[lo], right = nums[hi];
+        if (sum < target) {
+            while (lo < hi && nums[lo] == left) lo++;
+        } else if (sum > target) {
+            while (lo < hi && nums[hi] == right) hi--;
+        } else {
+            res.push_back({left, right});
+            while (lo < hi && nums[lo] == left) lo++;
+            while (lo < hi && nums[hi] == right) hi--;
+        }
+    }
+    return res;
+}
+```
+
+#### 直接 3sum-4sum问题：
+
+简单的思路：穷举，然后判断即可；结合的思路，遍历所有的第一个，然后就转化为2Sum的问题了，为了使得结果不重复，我们需要由于我们的2 sum算法中有避免重复，所以我们就只要保证第一个遍历的数字不要重复即可。
+
+但是这样加入让我们求100 sum的话，我们可以根据上面的方式，总结出一个通用的方程：
+
+```cpp
+/* 注意：调用这个函数之前一定要先给 nums 排序 */
+vector<vector<int>> nSumTarget(
+    vector<int>& nums, int n, int start, int target) {
+
+    int sz = nums.size();
+    vector<vector<int>> res;
+    // 至少是 2Sum，且数组大小不应该小于 n
+    if (n < 2 || sz < n) return res;
+    // 2Sum 是 base case
+    if (n == 2) {
+        // 双指针那一套操作
+        int lo = start, hi = sz - 1;
+        while (lo < hi) {
+            int sum = nums[lo] + nums[hi];
+            int left = nums[lo], right = nums[hi];
+            if (sum < target) {
+                while (lo < hi && nums[lo] == left) lo++;
+            } else if (sum > target) {
+                while (lo < hi && nums[hi] == right) hi--;
+            } else {
+                res.push_back({left, right});
+                while (lo < hi && nums[lo] == left) lo++;
+                while (lo < hi && nums[hi] == right) hi--;
+            }
+        }
+    } else {
+        // n > 2 时，递归计算 (n-1)Sum 的结果
+        for (int i = start; i < sz; i++) {
+            vector<vector<int>> 
+                sub = nSumTarget(nums, n - 1, i + 1, target - nums[i]);
+            for (vector<int>& arr : sub) {
+                // (n-1)Sum 加上 nums[i] 就是 nSum
+                arr.push_back(nums[i]);
+                res.push_back(arr);
+            }
+            while (i < sz - 1 && nums[i] == nums[i + 1]) i++;
+        }
+    }
+    return res;
+}
+```
+
+### Union-Find并查算法
+
+#### 理论基础
+
+解决的是图论中的动态连通性问题，也就是逐渐建立图的连通关系（自反性，传递性，对称性）的时候，以下几种API的实现（参考后面提到的数据结构）。
+
+- 联通性判断：父节点是否相同。（parent （x）== x）
+- 建立连接：将其中任意一个节点的根节点指向另一个节点的根节点上；
+- 连通分量统计：每次建立连通性的时候--
+
+使用的数据结构类型：**森林（若干树）**（每个节点指向其父节点，根节点指向自己）
+
+> 通过父节点是否一致来进行判断，是否联通，如果根据这个原理的话，那么树的平衡，也就是深度就比较重要了。合理的设计能够降低树的深度，也就能降低搜索父节点的时间消耗：从而减少无论是建立联通还是连通性判断两个部分。
+
+**平衡性优化**：如何避免Union中树的不平衡现象产生？每次**将小树接到大树后面**，而不是反过来。
+
+那么我们在每个树种存储相应的size，也就是结点数目，这样在进行Union的时候进行判断就可以了。
+
+```cpp
+class UF {
+    // 连通分量个数
+    private int count;
+    // 存储一棵树
+    private int[] parent;
+    // 记录树的“重量”
+    private int[] size;
+
+    public UF(int n) {
+        this.count = n;
+        parent = new int[n];
+        size = new int[n];
+        for (int i = 0; i < n; i++) {
+            parent[i] = i;
+            size[i] = 1;
+        }
+    }
+
+    public void union(int p, int q) {
+        int rootP = find(p);
+        int rootQ = find(q);
+        if (rootP == rootQ)
+            return;
+
+        // 小树接到大树下面，较平衡
+        if (size[rootP] > size[rootQ]) {
+            parent[rootQ] = rootP;
+            size[rootP] += size[rootQ];
+        } else {
+            parent[rootP] = rootQ;
+            size[rootQ] += size[rootP];
+        }
+        count--;
+    }
+
+    public boolean connected(int p, int q) {
+        int rootP = find(p);
+        int rootQ = find(q);
+        return rootP == rootQ;
+    }
+
+    private int find(int x) {
+        while (parent[x] != x) {
+            // 进行路径压缩
+            parent[x] = parent[parent[x]];
+            x = parent[x];
+        }
+        return x;
+    }
+}
+```
+
+**常数级别路径压缩：**
+
+对[find函数进行改进](https://mp.weixin.qq.com/s?__biz=MzAxODQxMDM0Mw==&mid=2247484751&idx=1&sn=a873c1f51d601bac17f5078c408cc3f6&chksm=9bd7fb47aca07251dd9146e745b4cc5cfdbc527abe93767691732dfba166dfc02fbb7237ddbf&scene=21#wechat_redirect)，每次在进行find的时候同时进行压缩，添加一行代码即可。所有的树高不会超过3，（union的时候树高可能达到3）
+:question:在这种情况下平衡判断还重要吗，毕竟find压缩的复杂度已经是O(1)了。
+
+可以不要，基本确实是O(1)但是确实能略微提高运算的效率就是了。 ​
+
+```cpp
+private int find(int x) {
+    while (parent[x] != x) {
+        // 进行路径压缩
+        parent[x] = parent[parent[x]];
+        x = parent[x];
+    }
+    return x;
+}
+```
+
+#### 实际应用：
+
+考虑到把原问题转化成图的动态连通性的关系，同时有一些小技巧：
+
+- 将二维数组映射到一维数组；`uf.union(x * n + y, i * n + j);`
+- 使用方向代码d来简化代码量！` **int**[][] d = **new** **int**[][]{{1,0}, {0,1}, {0,-1}, {-1,0}};`
+- 很多复杂的DFS都可以使用Union-Find来进行解决
+
+##### 应用1：130被围绕的区域
+
+不那么贴切，也就是130题，围棋问题，完全被围住才能换成x所以边界上是安全的，所以，我们就首先找到和边界上的O联通的所有点，然后把其他的不与这种情况联通的O全部换成X即可。
+
+> 传统方法，遍历边界，然后从这些O DFS出去。标记为#，然后将其余的O换成X，然后再将#换回来即可。
+
+##### 应用2：判定合法算式
+
+这题实际上就是典型的联通问题，根据等式去建立联通关系，然后根据字符翻译成是否联通即可。具体实现：
+
+![image-20210220115756979](${NoteImage}/image-20210220115756979.png)
+
+```cpp
+boolean equationsPossible(String[] equations) {
+    // 26 个英文字母
+    UF uf = new UF(26);
+    // 先让相等的字母形成连通分量
+    for (String eq : equations) {
+        if (eq.charAt(1) == '=') {
+            char x = eq.charAt(0);
+            char y = eq.charAt(3);
+            uf.union(x - 'a', y - 'a');
+        }
+    }
+    // 检查不等关系是否打破相等关系的连通性
+    for (String eq : equations) {
+        if (eq.charAt(1) == '!') {
+            char x = eq.charAt(0);
+            char y = eq.charAt(3);
+            // 如果相等关系成立，就是逻辑冲突
+            if (uf.connected(x - 'a', y - 'a'))
+                return false;
+        }
+    }
+    return true;
+}
+```
+
+### 从LRU到LFU
+
+LRU：Least recently used 最近使用的就是有用的；
+
+LFU：Least frequently used 最频繁使用的是有用的；
+
+#### LRU设计
+
+我的思路如下：
+
+> 怎么去设计这样一个数据结构，实际上是优先队列把？用一定的规则来设计这样的queue，但是为了要能在O(1) push 和get，我们可以使用hashmap，&存放使用的时序和val，以及一个step指向当前的操作数字，但是push中hashmap的删除涉及到find的操作，需要O（n）。**所以不行 **
+
+正确使用的数据结构应该是：Hash（支持快速索引链表的位置）+双向链表（支持快速的插入和删除）在CPP中使用`unordered_map`和`自定义双向链表`来实现双向哈希链表。
+
+Push 需要判断是否超出了边界。
+
+![image-20210220122507548](${NoteImage}/image-20210220122507548.png)
+
+**具体代码实现如下：**
+
+```cpp
+
+struct Dlist{
+    int val, key;
+    Dlist* prev;
+    Dlist* next;
+    Dlist():key(0),val(0),prev(nullptr),next(nullptr){}
+    Dlist(int k, int v):key(k),val(v),prev(nullptr),next(nullptr){}
+};
+
+class LRUCache {
+private:
+    int cap,size; 
+    unordered_map<int,Dlist*> loc;
+    // 双向链表，存个头尾不过分吧
+    Dlist* head;
+    Dlist* tail; // 指向最后一个的后一个
+
+public:
+    LRUCache(int capacity):cap(capacity),size(0) {
+        head = new Dlist();
+        tail = new Dlist();
+        head->next = tail;
+        tail->prev = head;
+    }
+    
+    int get(int key) {
+        if(!loc.count(key))
+            return -1;
+        // 最近使用，移到头部，删除原位
+        Dlist* root = loc[key];
+        movetohead(root);
+        return root->val;
+    }
+    
+    void put(int key, int value) {
+        // 这里需要一个add和一个remove
+        // 当cap不满的时候我们就直接加到List和Hash中，原值不存在
+        if(!loc.count(key)){
+            
+            // 先创建新节点，然后判断cap
+            Dlist* root = new Dlist(key,value);
+            // 容易忘记在hash表中添加
+            loc[key] = root;
+            addHead(root);
+            size++;
+            if(size > cap){
+                Dlist* temp = removeTail();
+                loc.erase(temp->key);
+                // 防止内存泄露
+                delete temp;
+                --size;
+            }
+        }else{
+            Dlist* root = loc[key];
+            root->val = value;
+            movetohead(root);
+        }
+    }
+
+    void movetohead(Dlist* root){
+        // 实际上是删除炒作：上一个的下一个和下一个的上一个
+        // 实际上也是put操作：然后接在头后面
+        deleteNode(root);
+        addHead(root);
+    }
+    // 在写移动算法的时候附加的操作
+    void deleteNode(Dlist* root){
+        root->prev->next = root->next;
+        root->next->prev = root->prev;
+    }
+	// 在写移动算法的时候会归纳出来的操作
+    void addHead(Dlist* root){
+        root->next = head->next;
+        root->prev = head;
+        root->next->prev = root;
+        head->next = root;
+    }
+    Dlist* removeTail(){
+        // 由于tail指向的是最后一个的后一个，实际上我们只要调用delete就行了
+        Dlist* temp = tail->prev;
+        deleteNode(temp);
+        // return是为了delete方便删除
+        return temp;
+    }
+};
+```
+
+#### LFU设计
+
+LFU相比于LRU来说设计上还是要复杂不少的，首先就是LFU除了维护一个优先队列以外，优先的判断和存储是比较难得，我们怎么样去存放一个决定优先级的freq的数据，然后能够很快的找到需要弹出的freq。这个freq还要能够很快的进行更新就是了。
+
+- 维护一个freq的优先级，同时freq中也有时序的关系，最新最旧。
+- 其他的和LRU还是挺像的。
+
+这一题还是看看官方的题解把：这题的的两种解法一种set，考虑双哈希的解法；
+
+画张图还是很容易理解的，也就是通过每个freq的一个双向链表，以及hash指向特定key的双结构去做，根据插入到尾部，就能维护到尾部。
+
+[两种方法都很有参考价值](https://leetcode-cn.com/problems/lfu-cache/solution/lfuhuan-cun-by-leetcode-solution/)
+
+### 一些其他的算法技巧
+
+#### 接雨水
+
+我的思路：记录变化点，然后减掉区域内的面积，就是雨水的面积，用两个flag可以实现，一个记录变化，一个记录是否成area。
+
+FA解法
+
+1. 暴力解法：对于每个i找到left的最高点，right的最高点，然后选低的哪个，减掉当前坐标即可。
+2. 用备忘录优化：需要两个，从左到右的最大，和从右到左的最大，然后按图索骥就可以了
+3. 双指针解法：实际上是上一个方法的改进，我们只要知道，无论距离多远，只要一段比较高，就能把低的那边的水给锁住，那么我们只需要一直移动比较低的那一侧就好了，写写看。
+
+#### 判断完美矩形
+
+原来不用自己组合，那有什么难的，面积加端点判断就好了，试着写一下：
+
+- 断电判断：一个小矩形的端点，如果只有奇数个矩形接触，那就是一个额外的顶点，这样的顶点超过4个就不行
+- 面积就是很简单了。
+
+#### 翻转煎饼
+
+和我想的没什么区别，找到最大的，翻到顶上，然后翻到底下，然后递归；
+
+#### :star:考官调度885：
+
+**但凡遇到在动态过程中取最值的要求，肯定要使用有序数据结构，我们常用的数据结构就是二叉堆和平衡二叉搜索树了**。
+
+**如果将每两个相邻的考生看做线段的两端点，新安排考生就是找最长的线段，然后让该考生在中间把这个线段「二分」，中点就是给他分配的座位。`leave(p)`其实就是去除端点`p`，使得相邻两个线段合并为一个**。
+
+也就是使用set来做
+
+
+
+这是这题的思路，但是我们还是看看官方解答把
+
+#### 实现一个计算器：
+
+通过stack实现加减乘除（遇到符号将前面的数字入栈），遇到左括号进入递归，遇到右括号跳出递归，遇到空格进行处理。
+
+[参考链接](https://mp.weixin.qq.com/s?__biz=MzAxODQxMDM0Mw==&mid=2247484903&idx=1&sn=184beaad36a71c9a8dd93c41a8ba74ac&chksm=9bd7fbefaca072f9beccff92a715d92ee90f46c297277eec10c322bc5ccd053460da6afb76c2&scene=21#wechat_redirect)
+
+#### 反直觉概率：
+
+##### 生男生女都一样
+
+男女这个我持保留态度，性别不应该用年龄来划分空间，这种歧义
+
+##### 生日问题
+
+应该转化为计算每个人的生日都不同。就可以大概计算出来。
+
+##### 三门问题
+
+应该转化为概率浓缩来理解，换门相当于选择了后面两扇门的概率。
+
+#### 随机算法：水塘抽样算法
+
+如何在不知道总数的时候产生均匀的随机数？
+
+这篇文章的启发性很好，实际上就是我们通过将1/n 换成1/i ，然后再获取到下一个index的时候，做一个保留还是变换的决定.
+
+可以证明，保留的概率为1/i，变换的概率是(i-1)/i;
+
+> **同理，如果要随机选择`k`个数，只要在第`i`个元素处以`k/i`的概率选择该元素，以`1 - k/i`的概率保持原有选择即可**。代码如下：
+
+```cpp
+/* 返回链表中一个随机节点的值 */
+int getRandom(ListNode head) {
+    Random r = new Random();
+    int i = 0, res = 0;
+    ListNode p = head;
+    // while 循环遍历链表
+    while (p != null) {
+        // 生成一个 [0, i) 之间的整数
+        // 这个整数等于 0 的概率就是 1/i
+        if (r.nextInt(++i) == 0) {
+            res = p.val;
+        }
+        p = p.next;
+    }
+    return res;
+}
+```
+
+![image-20210222222116871](${NoteImage}/image-20210222222116871.png)
+
+拓展延伸：
+
+> 以上的抽样算法时间复杂度是 O(n)，但不是最优的方法，更优化的算法基于几何分布（geometric distribution），时间复杂度为 O(k + klog(n/k))。由于涉及的数学知识比较多，这里就不列出了，有兴趣的读者可以自行搜索一下。
+>
+> 还有一种思路是基于 [Fisher–Yates 洗牌算法](http://mp.weixin.qq.com/s?__biz=MzAxODQxMDM0Mw==&mid=2247484503&idx=1&sn=e30ef74eb16ad385c16681cd6dfe15cf&chksm=9bd7fa5faca07349c6877bc69f9a27e13585f2c5ed2237ad37ac5b272611039391acc1dcd33d&scene=21#wechat_redirect) 的。随机抽取`k`个元素，等价于对所有元素洗牌，然后选取前`k`个。只不过，洗牌算法需要对元素的随机访问，所以只能对数组这类支持随机存储的数据结构有效。
+>
+> 另外有一种思路也比较有启发意义：给每一个元素关联一个随机数，然后把每个元素插入一个容量为`k`的二叉堆（优先级队列）按照配对的随机数进行排序，最后剩下的`k`个元素也是随机的。
+
+#### 差分数组、前缀和  1109航班预定统计
+
+首先分别介绍一下前缀和和差分数组的定义和作用：
+
+**前缀和**
+
+简单来说定义为如下形式：便于计算区间内的累加和之类的操作
+![image-20210222135134809](${NoteImage}/image-20210222135134809.png)
+
+**差分数组**
+
+主要使用于对区间内的一定元素进行统一的加减运算；
+***差分数组的主要适用场景是频繁对原始数组的某个区间的元素进行增减**。*
+
+![image-20210222135308593](${NoteImage}/image-20210222135308593.png)
+
+**这样构造差分数组`diff`，就可以快速进行区间增减的操作**，如果你想对区间`nums[i..j]`的元素全部加 3，那么只需要让`diff[i] += 3`，然后再让`diff[j+1] -= 3`即可：
+
+最后再又差分数组反推出最终的值就可以了。
+
+具体应用：机票预定
+
+```cpp
+vector<int> corpFlightBookings(vector<vector<int>>& bookings, int n) {
+        // 初始化结果数组
+        vector<int> res(n,0);
+        if(bookings.empty()) return res;
+        // 构建差分数组,初始就全是0，没问题的
+        vector<int> diff(n,0);
+        
+        // 差分求解
+        for(auto book: bookings){
+            int i = book[0]-1;
+            int j = book[1]-1;
+            int val = book[2];
+            diff[i]+= val;
+            if(j+1<n) diff[j+1]-=val;
+            
+        }
+       
+        // 数组还原
+        res[0] = diff[0];
+        for(int i =1;i<n;i++){
+            // cout<<diff[i]<<" ";
+            res[i] = diff[i]+res[i-1];
+        }
+        return res;
+    }
+```
+
+#### 快排亲兄弟：快速选择算法215
+
+经典问题**数组中第k个最大元素**
+
+1. 使用二叉堆（优先队列）的解法：显然就是一个针对这种数据结构的问题，我们甚至可以自己写一下这种结构，但是确实是比较麻烦来着。、
+2. 使用快速排序的解法：
+
+```cpp
+// 优先队列的方法
+class Solution {
+public:
+    int findKthLargest(vector<int>& nums, int k) {
+        // 使用优先队列的方法进行问题的求解
+        if(nums.empty() || nums.size()<k) return {};
+        priority_queue<int,vector<int>,greater<int>> pq;
+        for(auto num:nums){
+            pq.push(num);
+            if(pq.size()>k) 
+                pq.pop();
+        }
+        return pq.top();
+    }
+};
+```
+
+
+
+##### 快速排序的方法和思路
+
+实际上就是不完全的快速排序，使用二分的策略叠在快速排序上，当我们排序到K的时候，就直接return就行，但是为了使得算法不是每次都取到极端情况，我们每次首先将数组进行一次随机的打乱策略。
+
+```cpp
+class Solution {
+public:
+    int findKthLargest(vector<int>& nums, int k) {
+        if(nums.empty()||nums.size()<k) return {};
+        // 首先打乱数组避免极端情况产生
+        random_shuffle(nums.begin(),nums.end());
+        // 使用二分查找的方法来找到真实的坐标
+        int n = nums.size();
+        int lo = 0; int hi = n-1;
+        int resindex = n-k;
+        while(lo<=hi){
+            int p = partition(nums,lo, hi);
+            if(p>resindex){
+                hi = p-1;
+            }else if(p<resindex){
+                lo = p+1;
+            }else{
+                return nums[p];
+            }
+        }
+        return -1;
+        
+    }
+    int partition(vector<int>& nums, int lo, int hi){
+        // 快排的划分,初始化为lo
+        if(lo==hi) return lo;
+        int i = lo; int j = hi+1;
+        int privot = nums[lo];
+        while(true){
+            while(nums[++i]<privot){
+                if(i>=hi) break;
+            }
+            while(nums[--j]>privot){
+                if(j<=lo) break;
+            }
+            if(i>=j) break; 
+            swap(nums[i],nums[j]);
+        }
+        swap(nums[lo],nums[j]);
+        return j;
+    }
+};
+```
+
+#### 快速计算素数的个数
+
+通过是否是素数的一个个判断的效率没有我们从下网上填充false快，同时填充的时候注意内层循环和外层循环都能通过sqrt进行优化，外层是因为只需要到sqrt就可以了，内层是平方前面的都是重复的。
+
+```
+直接看写好的代码文件。
+```
+
+#### super pow 模幂运算
+
+实际上计算的关键就是如下的公式：(用AK+B)之类的假设很容易证明
+$$
+（a*b)\% k = (a\%k)(b\%k)\%k;
+$$
+然后再根据幂运算的乘积性质就很容易了，然后用递归的去做，（分奇偶）
+$$
+a^{M+N} = a^M * a^N \\
+A^{MN} = A^{M^N}
+$$
+再进一步的优化得到快速幂算法,证明还是基于上面的假设
+$$
+a^b \%c == (a\%c)^b
+$$
+这里给出两种，一种是每次去最尾巴那一位，一个是**快速幂算法**
+
+```cpp
+快速幂算法
+int base = 1337;
+
+int mypow(int a, int k) {
+    if (k == 0) return 1;
+    a %= base; // 这里和直观的理解上是有所偏差的，
+    // 我如果将这里注释掉，转移到下面的两个a中，还是正确的，但是效率差了点
+
+    if (k % 2 == 1) {
+        // k 是奇数
+        return (a * mypow(a, k - 1)) % base;
+    } else {
+        // k 是偶数
+        int sub = mypow(a, k / 2);
+        return (sub * sub) % base;
+    }
+}
+```
+
+每次取基底，和其余数组的10次方相乘
+
+```cpp
+int base = 1337;
+// 计算 a 的 k 次方然后与 base 求模的结果
+int mypow(int a, int k) {
+    // 对因子求模
+    a %= base;
+    int res = 1;
+    for (int _ = 0; _ < k; _++) {
+        // 这里有乘法，是潜在的溢出点
+        res *= a;
+        // 对乘法结果求模
+        res %= base;
+    }
+    return res;
+}
+
+int superPow(int a, vector<int>& b) {
+    if (b.empty()) return 1;
+    int last = b.back();
+    b.pop_back();
+
+    int part1 = mypow(a, last);
+    int part2 = mypow(superPow(a, b), 10);
+    // 每次乘法都要求模
+    return (part1 * part2) % base;
+}
+```
+
+#### 寻找缺失元素：
+
+1. 排序 ×
+2. hash ×
+3. 按index异或
+4. 等差数列求和-当前和：防止溢出边加边减
+
+#### 寻找缺失和重复元素（同时出现）
+
+对于这种数组问题，**关键点在于元素和索引是成对儿出现的，常用的方法是排序、异或、映射**。
+
+这里介绍的是映射的方法，
+
+```
+val-> index -> nums[index] = -nums[index];
+```
+
+这样当我们发现其中的有个数是正数的时候，对应的index就是缺失元素，发现有个数要变换的时候已经是负数的时候就是重复元素。
+
+#### 字符串乘法：
+
+由于字符串做乘法，就很直观的就是大数相乘的问题，所以就是不能直接转成整形去做，我们直接模仿手乘画图就行，这里的关键在于将我们的乘法拆解的更加的底层
+
+[图不好放，看网站上的，写的特别清楚](https://mp.weixin.qq.com/s?__biz=MzAxODQxMDM0Mw==&mid=2247484466&idx=1&sn=0281340cc1f41230e4512e905b9d27dd&chksm=9bd7fa3aaca0732c95d25c637d42ad8d9b80f8165098ded837f83791c673b5d6a71721c738a3&scene=21#wechat_redirect) 
+
+主要的问题在一个坐标的转换，但是仔细观察的话问题也不大
+
+#### 判断括号的合法性：
+
+1. 单种括号，我们只需要（++ ）--进行判断就可以了，最终==0
+2. 多种括号，需要增加存储的信息：使用STACK，遇到左括号就入栈，右括号就出栈，出栈的时候进行匹配。
+
+#### 判定子序列
+
+很简单的解法：利用双指针直接求解：
+
+```cpp
+bool isSubsequence(string s, string t) {
+    int i = 0, j = 0;
+    while (i < s.size() && j < t.size()) {
+        if (s[i] == t[j]) i++;
+        j++;
+    }
+    return i == s.size();
+}
+```
+
+**如果有一系列字符串s1,s2,s....和t做匹配的时候怎么做呢？**
+
+可以按照现在的方法加入for 循环，但是如果使用二分法，可O(N)减低到O(M)(N),但是实际上我们也不追求这个，
+
+- 统计t中每一个字符出现的位置，创建这样一个数组
+- 然后遍历再每个字母的数组中进行二分搜索就行了。
 
 
 
