@@ -1,5 +1,5 @@
 # 实习准备
-
+TO BE CONTIUNE.. UPDATE LATER
 Written by Aiken in 2020； This repo is used to store Leetcode's training code and related notes. Use as a personal private notebook。
 
 这个repo用来存储Leetcode的训练代码和相关笔记,仅作为个人的私有笔记本使用。以c++为主，可以在一些特殊的情境下使用python来进行做题（Nope， future）。最重要的就是对于数据结构等等编程原理和编程技巧的复习和学习。
@@ -54,7 +54,7 @@ HR面典型问题：
 
 **面试和资料准备**
 
-到时候找师兄什么的要一下简历，同时整理一下自己做过的实验和项目；近期的话赶紧推进一下新类发现或者是小样本上进一步的研究，比如结合长尾分布的数据。
+到时候找师兄什么的要一下简历，同时整理一下自己做过的实验和项目；
 
 ### 一些基本的仓库：
 
