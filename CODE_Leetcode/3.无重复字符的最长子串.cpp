@@ -16,6 +16,7 @@ public:
             char c = s[right];
             right++;
             // 进行窗口内数据的一系列更新
+            // 实际上这里就是每个字符都是想要的，所以就全部往里放
             window[c]++;
             // 判断左侧窗口是否要收缩
             while (window[c] > 1) {

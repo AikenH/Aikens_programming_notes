@@ -70,7 +70,7 @@ STD：standard library C++中的标准库，包含了一些最基础的标准操
  - **THIS IS IMPORTANT：**如果我们想要将功能和主题main（entrypoint）分离开来，除了用header的方式，我们也可以写在另外的.cpp中，然后再主要文件中进行declaration（定义函数名和指定的传入参数即可），也就是**声明该函数是存在的**，而不用具体定义（具体定义在另外的cpp中），这样在build的过程中，linker就会在我们的工程项目文件夹中搜索其他cpp中的指定function（we just declaration in the main cpp）。这样也能成功的编译。
 
  - 所以如果我们一个函数在多个cpp中定义（多重定义），或者由于header中的include h，这样可能会导致compile的时候出现代码（链接？）**混淆**的问题（bug），再不济也是个冗余的编译操作。
-   - 如果需要多次使用.h     我们可以将其中的函数定义成**static**的方式，这样在每个cpp中都会有自己版本的.h中的函数，就不会有重复编写导致模棱两可的问题了。
+   - 如果需要多次使用.h 我们可以将其中的函数定义成**static**的方式，这样在每个cpp中都会有自己版本的.h中的函数，就不会有重复编写导致模棱两可的问题了。
    
    - inline前缀也能解决同样的问题：内联函数
    
@@ -103,6 +103,8 @@ STD：standard library C++中的标准库，包含了一些最基础的标准操
 这个hash tag的作用是让预处理仅仅只编译头文件一次，就是多次import也不会重复编译把，这个东西不要删除它。
 
 原理上是取代了原本的ifnder；实际上也是一个宏
+
+这个的速度更快一些，也就是文件层面进行判断的，但是这个方法没办法处理那种文件名不同但是内容一致的情况。
 
 ```c++
 #ifndef Tag1_H
@@ -301,7 +303,7 @@ struct Timer
 
 `std::sort` need to `include<algorithm>` ；这是c++标准库中一个对Iterator进行排序的库。
 
-复杂度 O(N·log(N))，其中N=`std::distance(first,last)`
+复杂度 O(N·log(N))，其中N=`std::distance(first,last)`，快排算法
 
 参考网站：https://zh.cppreference.com/w/cpp/algorithm/sort 
 
@@ -313,7 +315,7 @@ struct Timer
 int main(){
     std::verctor<int> values = {1,3,4,5,2,6}
     std::sort(values.bagin(),values.end()); //空载或者<,>是基本的用法
-    //如果我们试图自定义函数的话
+    //如果我们试图自定义函数的话，用less<int>和greater<int>,更简洁一点，
     std::sort(values.bagin(),values.end(),[](int a, int b){
         if (a==1)
             return False; //1放到其他所有的后面
@@ -343,7 +345,7 @@ In this section we‘ll introduce **variables（data structure） in C++**，主
 
 实际上就是预先定义了内存的分配了表达的类型，大小实际上取决于编译器。
 
-可以用`sizeof()`查看各种**类型**占用的内存空间大小
+可以用`sizeof()`查看各种**类型**占用的内存空间大小，单位为字节，每个字节都是8位
 
 **Keyword：**
 
@@ -441,6 +443,8 @@ int main()
 
 [C++ const 关键字小结 | 菜鸟教程 (runoob.com)](https://www.runoob.com/w3cnote/cpp-const-keyword.html)
 
+const默认对左侧的起作用，如果左侧没有的话就对右侧起作用，通过这个定义来分辨不同位置的作用。
+
 **语义含义**：**不可变，不可修改**；
 
 - 可以令值不可变，也可以令指针不可变；定义一些常量之类的东西
@@ -476,7 +480,7 @@ int main()
 
 **实例说明：**
 
-对于传入函数的Instance（Entity）也是一样的，如果我们不希望进行内存上的copy，我们就加上&，如果我们不希望改变值就加入const。
+对于传入函数的Instance（Entity）也是一样的，如果我们**不希望进行内存上的copy**，我们就加上&，如果我们**不希望改变值就加入const。**
 
 用一些例子来说明一些其他情况的Const用法。 需要注意！
 
@@ -514,7 +518,8 @@ private:
     std::string m_name;
     mutable int m_DebugCount = 0;
 public:
-    // 结合上面的范例可以看出这个返回类型为啥回事这个const+&
+    // 结合上面的范例可以看出这个返回类型为啥回事这个const+& 
+    // 返回他的引用
     const std::string& GetName() const
     {
         m_DebugCount++;
@@ -523,7 +528,7 @@ public:
 }
 ```
 
-**用途2：**使用**lambda**的时候。我们希望能够修改传入值本身，（但是lambda是不允许修改的所以需要）
+**用途2：**使用**lambda**的时候。我们希望能够修改传入值本身，（但是lambda是不允许修改的所以需要），lambda的实际用途。
 
 ```c++
 int x = 8;
@@ -616,7 +621,7 @@ std::array<int,5> data;
 
 - 现在这种方式有很多的集成函数：比如说size，sort，began好像还有iterator之类的方法。
 - 因为传统的使用New，关键词是slow的，这种方法也会快一点，而且长度是不知道的。
-- verctor是heap上的，而array和传统的int，array都是存在在stack上的，（非new关键词）
+- **verctor是heap上的**，而array和传统的int，array都是存在在stack上的，（非new关键词）
 - 有很多优化，同时这种方法有自动的边界检测？
 - 在函数传入array的时候，建议可以使用template的方法。
 
@@ -909,6 +914,8 @@ Array<int, 5> array;
 比如我们实现向量类别的时候，我们就可以重载+，来实现这个加号，就是不用写一个Add函数（麻烦），主要是比较大规模的情况下为了使用方便来写的吧。
 
 **Example：**
+
+const是为了值是不能修改的，&是避免复制。
 
 ```c++
 Vector2 Add(const Vector2& other) const
@@ -1428,6 +1435,8 @@ example[2] = 5;
 
 ### 引用基础（references）
 
+引用实际上是 `type * cosnt A = & B`，所以可以修改值但是不能修改指向的地址
+
 - 用`type& ref = var`定义一个对var的引用，不需要其他的操作符
 
 - - 实际上ref就是一个别称，他**不是实际存在**的，只是var的另一种表达形式。
@@ -1592,7 +1601,7 @@ https://blog.csdn.net/albertsh/article/details/82286999
 - 也就是智能指针分配的数据空间是在heap上的，但是存储指针自身的空间是在stack上的
 - 先思考使用unique point 在需要不同的地方共享的时候在考虑share pointer 
   - 避免使用`new` `delete`
-- 实际上智智能指针就是对原生指针的一个高层封装，就是类似struct ，在struct 的destructor 调用指针指向地址的delete？ 看看视频中的代码。
+- 实际上智能指针就是对原生指针的一个高层封装，就是类似struct ，在struct 的destructor 调用指针指向地址的delete？ 看看视频中的代码。
 
 ## Part 4 Class & Struct 面向对象
 
@@ -1670,7 +1679,7 @@ friend的定义方式：在类内的public使用前置`friend` 去重载这个�
 
 用于destory我们生成的object或者说instance；清除变量。
 
-- 在构造函数前面加~就是定义的方式。一般不需要显式编程
+- 在构造函数前面加`~`就是定义的方式。一般不需要显式编程
 - 活到生命周期末尾（大括号之类的）会自动调用
 - 如果New 就需要Delete才会调用
 
@@ -1691,7 +1700,7 @@ friend的定义方式：在类内的public使用前置`friend` 去重载这个�
 1. 在父类中编写的**virtual function**就能在子类中选择覆盖重载
 
 2. **Virtual   function**可以避免在特殊情况下，我们在子类覆盖定义了父类函数的情况下，还是调用了夫类中的同名函数的情况：它加入了动态分配的机制，通过存档虚函数 所代表的各种虚函数映射情况，便于我们**找到正确的函数**。
-3. 实际上也就是在**需要重载（override）函数**前面加入一个**virtual**的关键字（在最前面）；同时可以在覆盖（override）的地方加上**override**关键字（在声明的最后面，大括号的前面），但是这不是必须的，但是更具备可读性。
+3. 实际上也就是在**需要覆盖（overwrite）函数**前面加入一个**virtual**的关键字（在最前面）；同时可以在重载（override）的地方加上**override**关键字（在声明的最后面，大括号的前面），但是这不是必须的，但是更具备可读性。
 
 4. 但是需要额外的内存空间：需要表需要基类指向虚函数表的指针；
 
@@ -1771,7 +1780,7 @@ Vector2* b = a;
 b->x
 ```
 
-如果不加入&会产生无线递归调用
+如果不加入&会产生无限递归调用
 
 ```c++
 Class A
@@ -1781,7 +1790,7 @@ private:
 public:
     A(int temp)
         :var(temp){}
-    A(const A temp)
+    A(const A temp) // 会在这里产生无限的递归调用，所以这里前面应该加入&
     {
         this->var = temp.var;
     }

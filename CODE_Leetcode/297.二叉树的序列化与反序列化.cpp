@@ -65,7 +65,6 @@ public:
                 Tmpstr.clear();
             }
             else{
-                // FIXME：append就不行但是push_back就可以，为什么？
                 Tmpstr.push_back(data[i]);
             }
         }

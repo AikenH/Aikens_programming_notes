@@ -4,6 +4,16 @@
 
 IN THIS DOCUMENT，主要介绍一些常用数据类型的一些method，区别还有一些特殊的定义；
 
+priority_queue 默认是大顶堆，great的话是小顶堆，less的话是大顶堆，自定义的话不知道是不是一致的
+
+set默认top是小顶，这个大小我就不知道了，自定义的话，好像和我想得是一致的
+
+**所有的动态容器都是存放在heap上的，像是什么Vector，String，unordered_map之类的**
+
+## 指定精度的输出和计算
+
+在腾讯的笔试中出现的需要指定精度和指定的计算精度的分析，在使用常数的时候一定要使用.0去修正一个方法。
+
 ## Vector 动态数组
 
 Vector中的一些常用的函数，方法，以及一些属性介绍和辨析
@@ -48,11 +58,23 @@ vector<vector<int>> vec(size1,vector<int>(size2,defaultvalue));
 1. **set**: `*it`即可；
 2. **map：**`*it`取的应该是value，**key**的话通过 `it->first`来取值，**value**通过`it->second`
 
+### 按照迭代器来初始化
+
+```cpp
+unordered_set<string> deaded(deadends.begin(),deadends.end());
+```
+
+
+
 ### 是否存在键值
 
 使用`.count`不要再用find和end了，那个估计时间成本特别高了。。。。怎么更慢了。
 
 使用map[key] 可以访问键对应的值，但是如果Key不存在，cpp会自动创建这个key同时赋值为0；
+
+### erase
+
+可以直接根据键值进行erase()
 
 ## List 双向链表like
 
@@ -101,6 +123,8 @@ strcat：直接用+就行了
 
 实际上就是队列数据结构的CPP实现，基本的特征和队列的要求是一致的，常在BFS中使用到。
 
+
+
 ### 常用的成员函数和操作
 
 1. `front/back`：访问首/尾元素;
@@ -117,7 +141,7 @@ strcat：直接用+就行了
 
 [参考资料](https://blog.csdn.net/weixin_36888577/article/details/79937886) “例如，用 std::greater<T> 将导致最小元素作为 [top()](https://zh.cppreference.com/w/cpp/container/priority_queue/top) 出现。”
 
-### Usage 基本使用方式
+#### Usage 基本使用方式
 
 ```cpp
 priority_queue<type, container, compare>
@@ -131,6 +155,16 @@ top
 push、pop、emplace
 swap
 ```
+
+### Priority_queue与Multiset辨析：
+
+实际上set和map这些数据结构是基于红黑树进行建立的，而优先队列是基于**最大堆最小堆**来建立的，虽然他们都有序，但是实际上他们的结构还是大不相同的。
+
+堆本身是一个完全二叉树（除了最后一层以外都是满的，而且空的值都在右侧），同时满足夫节点大于所有子节点
+
+Set本身是一个自平衡的BST（红黑树）：
+
+> 红黑树是一种近似平衡的二叉查找树，它能够确保任何一个节点的左右子树的高度差不会超过二者中较低那个的一倍
 
 
 
@@ -169,6 +203,27 @@ swap
 2. 而通过`pop_heap`的话，实际上实现的是将要弹出的元素换到了末尾，这样我们从0，n-2的元素就是重构好的最大/小堆。必要的时候我们需要手动调用`pop_back()`，来对要弹出的元素进行实质上的弹出。
 3. `make_heap`将一个可迭代容器按照指定的compere建立成堆，默认是最大堆，输入的是begin，end，compa，
 
+## AVL平衡二叉搜索树
+
+实际上就是在插入元素的时候实现两个操作：
+
+1. 单旋转：插入的大小关系符合但是失衡的情况
+2. 双旋转：插入的大小关系不符合同时发生了失衡的情况
+
+[平衡二叉树](https://www.cnblogs.com/vamei/archive/2013/03/21/2964092.html)
+
+## B+、B树、红黑树
+
+根节点最少有两个子女，每个中间节点都包含k-1个元素和k个孩子，每个叶子节点都包含k-1个元素，所有的叶子节点都位于同一层。
+
+重点就在于节省io时间还有中间的节点数量等等
+
+B树与B+树：https://blog.csdn.net/windflybird/article/details/79875972
+
+红黑树：https://zhuanlan.zhihu.com/p/31805309
+
+红黑树和AVL的区分：https://www.jianshu.com/p/37436ed14cc6 ；https://www.it610.com/article/1297797681401372672.htm
+
 ## SWAP FUNCTION
 
 swap在实际操作的时候经常被用到，很多时候会被拿来代替删除等等的命令。
@@ -177,6 +232,47 @@ swap在实际操作的时候经常被用到，很多时候会被拿来代替删�
 
 1. 初始定义就是交换两个变量之间的赋值，但是在各个数据类型中都存在swap的特化方程，所以**根据该特化执行**的情况下，等价于`varA.swap(varB)`，会交换其中的所有值；
 2. 通过基本的定义也能实现vector中两个不同index下的值的交换；
+
+## Switch操作要常用
+
+代替if else
+
+```cpp
+class Solution {
+public:
+    int calculate(string s) {
+        vector<int> stk;
+        char preSign = '+';
+        int num = 0;
+        int n = s.length();
+        for (int i = 0; i < n; ++i) {
+            if (isdigit(s[i])) {
+                num = num * 10 + int(s[i] - '0');
+            }
+            if (!isdigit(s[i]) && s[i] != ' ' || i == n - 1) {
+                switch (preSign) {
+                case '+':
+                    stk.push_back(num);
+                    break;
+                case '-':
+                    stk.push_back(-num);
+                    break;
+                case '*':
+                    stk.back() *= num;
+                    break;
+                default:
+                    stk.back() /= num;
+                }
+                preSign = s[i];
+                num = 0;
+            }
+        }
+        return accumulate(stk.begin(), stk.end(), 0);
+    }
+};
+```
+
+
 
 ## 位操作运算
 
@@ -251,3 +347,32 @@ try {
 
 参考cpp reference进行基本的学习吧，实际上
 
+
+
+## Accumulate，isdigit
+
+通过迭代器叠加其中的所有数字
+
+isdigit：返回的是是否是0~9的字符把
+
+## Define定义函数
+
+```cpp
+#define nRand(n){rand() % n}
+```
+
+
+
+## 指针相关内容
+
+### 函数指针
+
+用typedef减少输入量的写法，实际应用在之前的cpp笔记中已经有了
+
+### 智能指针
+
+unique_prt<>:会自己销毁的指针，管理的是堆对象，但是指针本身是随着栈，来进行管理的
+
+shared_ptr<>：对于同一个对象会维护一个指向该对象的count，通过这个count，在count清零的时候自动析构该类
+
+weak_ptr<>: 防止shared_ptr产生两个shard交互引用的情况，这样就永远不会被释放，通过weak指针，他不进行计数，当weak指针被销毁的时候就直接将空间释放，也不会使得技术++

@@ -142,3 +142,5 @@ cython_debug/
 .vscode/
 Temp_cppTest/
 *.docx
+*.zip
+*.pdf

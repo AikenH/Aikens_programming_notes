@@ -30,11 +30,9 @@ public:
             if(envelopes[i][1]>dpt[len]){
                 len = len + 1;
                 dpt[len] = envelopes[i][1];
-
             }
             else{
-                //TODO:lower_boundry的使用
-                // FIXME:不知道这个二分查找的问题在哪，非常疑惑 change的位置放错了
+                
                 int l = 1, r = len, cur = 0;
                 while(l<=r){
                     int mid = (l+r)>>1;

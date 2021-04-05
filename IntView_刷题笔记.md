@@ -322,7 +322,63 @@ public:
 };
 ```
 
+##### 删除数组中的重复元素316 1081
+
+这一题实际上还是用单调栈的思路，让里面的顺序尽量是按照从小到大排，就是增加了约束，也就是：
+
+- 里面已经有的我们就直接过；
+- 后面没有再出现的情况我们也直接过；
+- 如果是比里面的大就直接加进去，如果是比里面的小，我们就pop到直接过的时候再加
+- 需要两个辅助的存放判断的辅助情况
+
+```cpp
+class Solution {
+public:
+    string removeDuplicateLetters(string s) {
+        if(s.empty()) return {};
+        // 初始化需要的存储数据结构
+        vector<int> countAl(256,0); 
+        vector<bool> countSt(256,false);
+        stack<int> store;
+        // 初始化count数组
+        for(auto t: s){
+            countAl[t]++;
+        }
+        for(char c: s){
+            countAl[c]--;
+            if(countSt[c]) continue;
+            while(!store.empty() && store.top()>c){
+                // 如果top后面没有了
+                if(countAl[store.top()]==0)
+                    break;
+                // 如果还有就pop
+                countSt[store.top()] = false;
+                store.pop();
+            }
+            store.push(c);
+            countSt[c] = true;
+        }
+        // 对stack中的字符进行反转然后输出
+        string res;
+        stack<char> temp;
+        while(!store.empty()){
+            temp.push(store.top());
+            store.pop();
+        }
+        while(!temp.empty()){
+            res.push_back(temp.top());
+            temp.pop();
+        }
+        return res;
+    }
+};
+```
+
+
+
 #### 单调队列
+
+存进index，然后根据index取值来做判断
 
 实际上就是和上面一样的思路，剑指offer的队列中的最大值，用一个deque双向队列实现，刚好是剑指offer59题。维护一个头部是最大值的队列，后续的加入的时候，将前边比他小的都pop出去，再push，然后每次移动要把头pop出去。
 
@@ -350,6 +406,51 @@ public:
 通常理解的情况下我们需要依靠hash来实现O(1)的搜索和插入删除，但是，这样的话，我们没法等概率的取出随机数，我们认为需要借助index，产生一个随机的数字来索引，但是这样，我们就需要借助vector，那如何通过底层的vector来进行删除？
 
 使用hash来存储index，然后通过swap和pop来O(1)的删除，然后调用rand()和%来产生随机数即可。
+
+```cpp
+class RandomizedSet {
+public:
+    // 存储元素的值
+    vector<int> nums;
+    // 记录每个元素对应在 nums 中的索引
+    unordered_map<int,int> valToIndex;
+
+    bool insert(int val) {
+        // 若 val 已存在，不用再插入
+        if (valToIndex.count(val)) {
+            return false;
+        }
+        // 若 val 不存在，插入到 nums 尾部，
+        // 并记录 val 对应的索引值
+        valToIndex[val] = nums.size();
+        nums.push_back(val);
+        return true;
+    }
+
+    bool remove(int val) {
+        // 若 val 不存在，不用再删除
+        if (!valToIndex.count(val)) {
+            return false;
+        }
+        // 先拿到 val 的索引
+        int index = valToIndex[val];
+        // 将最后一个元素对应的索引修改为 index
+        valToIndex[nums.back()] = index;
+        // 交换 val 和最后一个元素
+        swap(nums[index], nums.back());
+        // 在数组中删除元素 val
+        nums.pop_back();
+        // 删除元素 val 对应的索引
+        valToIndex.erase(val);
+        return true;
+    }
+
+    int getRandom() {
+        // 随机获取 nums 中的一个元素
+        return nums[rand() % nums.size()];
+    }
+};
+```
 
 **进阶问题**
 
@@ -646,7 +747,6 @@ class Solution {
 private:
     int ans = INT_MIN;
 public:
-     // 好像不需要自己写std
     int maxPathSum(TreeNode* root) {
         helpSum(root);
         return ans;
@@ -988,8 +1088,7 @@ public:
 
 这一题的解题思路还是比较有意思的，解题过程中也出现了比较多的问题，还有一些有待解决的问题需要分析。
 
-- 为什么用**后序遍历这种方式的序列就能用来表征重复的子树**，这一点后序再好好琢磨琢磨；
-- unordered_map中的contains为啥不能用
+- 用**后序遍历的序列来表征子树**:可以观察特点，就知道只有后续遍历保留了子树的结构，其他的方式都有一部分是Top-Down的，就不符合子树的要求
 - String的方式来寻找重复子树
 - int变量如何转换到string，为啥出现了很多问题，还有网友的解决方法对比
 - 现在的时空复杂度结果都不太好到网上找一下更好的解决思路和解决的方案；
@@ -1020,9 +1119,7 @@ public:
         // FIXME int到string的转换到底怎么做，好疑惑啊。
         char temp = root->val +'0';
         string resstr = left + "," + right+"," + temp;
-        // 压入hashmap,但是普通的压入的话，会导致多个重复的root；
-        // 那么如果我们对memo用map管理的话，就只有==1的时候
-        // FIXME：为什么contains不能用
+        // 压入hashmap，通过数值判断重复的root；通过数值判断就知道有没有重复了
         if(memo.count(resstr))
             memo[resstr]++;
         if (memo[resstr]==1)
@@ -1046,10 +1143,9 @@ public:
 
 1. 需要总结一下各种数据类型的空值return方式（也就是空值的表达）
 
-   > string : ""
+   > string : "" {}
    >
-   > 
-
+   
 2. 相关的各种常见类型之间的转化；
 
    > string to int : stoi()
@@ -1174,6 +1270,7 @@ public int countNodes(TreeNode root) {
         return (int)Math.pow(2, hl) - 1;
     }
     // 如果左右高度不同，则按照普通二叉树的逻辑计算
+    // 这里两边都是null的情况就会回归1，不需要额外的判断
     return 1 + countNodes(root.left) + countNodes(root.right);
 }
 ```
@@ -1224,6 +1321,8 @@ public:
 
 #### 扁平化嵌套列表迭代器（341）
 
+这一题主要要好好的看提示和题目，
+
 这题的关键在于辅助空间的建立和相应的（迭代和循环的）嵌套，还有就是理解题目，但是这种简单的实现方式，实际上并不能达到一个比较好的时间和空间复杂度。
 
 **我的解法（初始）：**我的方法也可以改成用栈来实现，原理是一样的。
@@ -1271,7 +1370,8 @@ public:
 
 - **Vector反向迭代** `rbegin` `rend`
 - 利用栈，其实用队列然后正向迭代也是可以的
-- 初步就是先把外层存进去，在实际调用的时候再解包的方法。
+- 初步就是先**把外层存**进去，在实际调用的时候再解包的方法。
+- 实际上需要关注的地方就是hasnext用来解包的过程。
 
 ```c++
 class NestedIterator {
@@ -1476,6 +1576,43 @@ public:
 
 
 #### :star: BST删除（450）
+
+下面这个的思路其实和我们想的是一样的，但是这种书写的方式留意一下，用delete来做就好。
+
+```c++
+class Solution {
+public:
+    TreeNode* deleteNode(TreeNode* root, int key) {
+        if(root == nullptr) return root;//第一种情况：没找到删除的节点，遍历到空节点直接返回
+        if(root->val == key)
+        {
+            //第二种情况：左右孩子都为空（叶子节点），直接删除节点，返回NULL为根节点
+            //第三种情况：其左孩子为空，右孩子不为空，删除节点，右孩子补位，返回右孩子为根节点
+            if(root->left == nullptr) return root->right;
+            //第四种情况：其右孩子为空，左孩子不为空，删除节点，左孩子补位，返回左孩子为根节点
+            else if(root->right == nullptr) return root->left;
+            //第五种情况：左右孩子节点都不为空，则将删除节点的左子树放到删除节点的右子树的最左面节点的左孩子的位置
+            //并返回删除节点右孩子为新的根节点
+            else{
+                TreeNode* cur = root->right;//找右子树最左面的节点
+                while(cur->left != NULL)
+                {
+                    cur = cur->left;
+                }
+                cur->left = root->left;//把要删除的节点左子树放在cur的左孩子的位置
+                TreeNode* tmp = root;  //把root节点保存一下，下面来删除
+                root = root->right;    //返回旧root的右孩子作为新root
+                delete tmp;            //释放节点内存
+                return root;
+            }
+        }
+        if(root->val > key) root->left = deleteNode(root->left, key);
+        if(root->val < key) root->right = deleteNode(root->right, key);
+        return root;
+    }
+};
+
+```
 
 先找到，**然后改，**主要是不能破坏BST的数值结构.先写出基本的框架
 
@@ -1708,93 +1845,7 @@ public:
 
 ![image-20210129123612710](${NoteImage}/image-20210129123612710.png)
 
-**基本的实现思路如下（需要集成存储思路）** 但是如果这样的反向实现的话，很容易出现栈溢出的方法
-
-```c++
-class Solution {
-public:
-    int minDistance(string word1, string word2) {
-        // 实现将word1 变成 word2
-        // 首先使用递归的方式实现一下这个问题，然后再用迭代的方式做
-        int w2_idx = word2.size()-1;
-        int w1_idx = word1.size()-1;
-        vector
-        return DP(word1,word2,w1_idx,w2_idx);
-
-    }
-    int DP(string& s1, string& s2,int w1_idx, int w2_idx){
-        // besed case 某一条到零了，要么把多的删除，要么把少的插入，反正步骤都是类似的
-        // 记得要编写一个存储表来存储操作。
-        if(w2_idx == -1)
-            return w1_idx+1;
-        if(w1_idx == -1)
-            return w2_idx+1;
-        // 状态转移
-        if(s1[w1_idx]==s2[w2_idx])
-            return DP(s1,s2,w1_idx,w2_idx);
-        else{
-            // 分别是三种情况下的状态转移方程
-            return min(DP(s1,s2,w1_idx-1,w2_idx),
-                    DP(s1,s2,w1_idx,w2_idx-1),
-                    DP(s1,s2,w1_idx-1,w2_idx-1))+1;
-        }
-        
-    }
-};
-```
-
-:x: 修改过后仍然执行不了因为运行栈溢出了, 后续可以找一下有没有别人用这个思路做的。
-
-```c++
-class Solution {
-public:
-    int minDistance(string word1, string word2) {
-        // 实现将word1 变成 word2
-        // 首先使用递归的方式实现一下这个问题，然后再用迭代的方式做
-        int w2_idx = word2.size();
-        int w1_idx = word1.size();
-        // 存储表实现：vector 长度初始化学起来(主要需要存储一个空值所以记得后面的index要加1)
-        vector<vector<int>> memo(w1_idx+1,vector<int>(w2_idx+1));
-        // 初始状态初始化
-        for(int i =0; i<memo.size();i++)
-            memo[i][0] = i;
-        for(int j =0; j<memo[0].size();j++)
-            memo[0][j] = j;
-        return DP(word1,word2,w1_idx-1,w2_idx-1,memo);
-
-    }
-    int DP(string& s1, string& s2,int w1_idx, int w2_idx,vector<vector<int>>& memo){
-        // besed case 某一条到零了，要么把多的删除，要么把少的插入，反正步骤都是类似的
-        // 记得要编写一个存储表来存储操作。
-        if(w1_idx<0)
-            w1_idx =0;
-        if(w2_idx < 0)
-            w2_idx =0;
-        if(memo[w1_idx+1][w2_idx+1])
-            return memo[w1_idx+1][w2_idx+1];
-        // 执行了初始内存以后，这些情况会被存入初始情况表，所以不需要这么操作
-        // if(w2_idx == -1)
-        //     return w1_idx+1;
-        // if(w1_idx == -1)
-        //     return w2_idx+1;
-        // 状态转移
-        if(s1[w1_idx]==s2[w2_idx])
-        {
-            memo[w1_idx+1][w2_idx+1] = DP(s1,s2,w1_idx-1,w2_idx-1,memo);
-            return memo[w1_idx+1][w2_idx+1];
-        }
-        else{
-            // 分别是三种情况下的状态转移方程
-            memo[w1_idx+1][w2_idx+1]= DP(s1,s2,w1_idx-1,w2_idx,memo);
-            memo[w1_idx+1][w2_idx+1]= min(memo[w1_idx+1][w2_idx+1],DP(s1,s2,w1_idx,w2_idx-1,memo));
-            memo[w1_idx+1][w2_idx+1]= min(memo[w1_idx+1][w2_idx+1], DP(s1,s2,w1_idx-1,w2_idx-1,memo));
-            memo[w1_idx+1][w2_idx+1]++;
-            return memo[w1_idx+1][w2_idx+1];
-        }
-        
-    }
-};
-```
+**基本的实现思路如下（需要集成存储思路）** 
 
 ✔：动态规划的方法实际上还是Bottom-up更好，无论是从空间还是时间上来说 (但是实际上实现效率还是没有提高，为什么呢？)
 
@@ -1911,6 +1962,8 @@ public:
 修改前面的假设的方法：我们要以**当前值作为前面那个最长子序列的结尾（不是一次搜索完，而是只搜索到当前元素）**，然后维护一个长度的结尾值最小的算法。[官方解答](https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/zui-chang-shang-sheng-zi-xu-lie-by-leetcode-soluti/)
 
 **这里要学习一下二分查找的思路理念**
+
+这题实际上不就是单调栈模板的二分优化嘛，这种情况
 
 1. 通过一个-1来错开同时并减少多余计算。
 2. 用二分查找来找到第一个大于的值的位置（的思想）分析这种情况，从最后的区间开始分析。（我们要找的是第一个比他小的数，所以最后要加一）
@@ -2120,23 +2173,20 @@ public:
 ```c++
 class Solution {
 public:
-    // O(n^2暴力求解)
     int maxSubArray(vector<int>& nums) {
-        // 基本思路，要么和前面的并，要么自己从头开始
-        // 只需要三个值来存储就行，
-        int maxvalue = nums[0];
-        int premax = nums[0];
-        int tempvalue = nums[0];
-        for (int i = 1;i<nums.size();i++){
-            tempvalue = nums[i] + premax;
-            if (tempvalue > nums[i])
-                premax = tempvalue;
-            else
-                premax = nums[i];
-            if (premax > maxvalue)
-                maxvalue = premax;
+        int res = nums[0];
+        int pre = nums[0];
+        int cur = nums[0];
+        for (int i = 1; i < nums.size(); i++) {
+            // 当之前的综合>0 无脑加上
+            if (pre > 0) cur = pre + nums[i];
+            else cur = nums[i];
+            // 修改到上个数字为止的总和
+            pre = cur;
+            // 验证一下最大值
+            res = max(res, cur);
         }
-        return maxvalue;
+        return res;
     }
 };
 ```
@@ -2147,7 +2197,7 @@ public:
 
 那么我在思考的时候出现了一定的盲区（实际上画图很容易考虑到），在这里分析一下：
 
-我认为在状态变化的时候，假如两者不等（i+1，j+1），我们不知道如何去判断从（i,j+1）到（i+1，j+1），同样的另一侧也是，但是这就是我的思考盲区了，画个图可以看出，这样的情况实际上就是另一侧的最有子序列的return，因为如果他们不等，他们是没办法共同产生增益的，也就是一个在末尾的话，另一个就不能在末尾了。所以实际上也是两种转移状态中的max情况。那么就可以开始写了。
+因为如果他们不等，他们是没办法共同产生增益的，也就是一个在末尾的话，另一个就不能在末尾了。所以实际上也是两种转移状态中的max情况。那么就可以开始写了。
 
 ```c++
 class Solution {
@@ -2169,6 +2219,31 @@ public:
             }
         }
         return dpTable[m][n];
+    }
+};
+// 状态压缩后的结果
+class Solution {
+public:
+    int longestCommonSubsequence(string text1, string text2) {
+        if (text1.empty() || text2.empty()) return {};
+        int m = text1.size(); int n = text2.size();
+        // 建立dp，basecases
+        vector<int> dp(n + 1, 0);
+        // dp和text的index 对应关系有1的offset记得
+        for (int i = 1; i <= m; i++) {
+            int pre = 0; // 最关键的状态压缩在这，我们需要找到每一个j开始的时候这个值是什么
+            for (int j = 1; j <= n; j++) {
+                int temp = dp[j]; // 状态压缩的值，在更新当前值之前的保存，然后在下一次使用的时候就可以了。
+                if (text1[i - 1] == text2[j - 1]) {
+                    dp[j] = pre + 1;
+                }
+                else {
+                    dp[j] = max(dp[j], dp[j - 1]);
+                }
+                pre = temp; // 然后再这里给每个状态进行一次更新，
+            }
+        }
+        return dp[n];
     }
 };
 // 需要做的还有矩阵压缩没有考虑。写一下递归的框架（时间效益太差了，但是没错）
@@ -2927,7 +3002,7 @@ public:
 };
 ```
 
-**这题的优化写法十分的值得参考，我们如何利用我们自己创造的数据结构**
+**这题的优化写法十分的值得参考，我们如何利用我们自己创造的数据结构**,实际上和股票的是一样的也就是传输之前的买和没买的问题
 
 ```c++
 struct SubtreeStatus {
@@ -3193,6 +3268,8 @@ public:
 我们完全可以跳过那些被包含的情况，所以YOU KNOW
 
 **具体实现：（学）**
+
+这里主要是我们怎么去递增那个end可以学一下，其他的没啥，很容易想到这个贪心的思路
 
 ```c++
 class Solution {
@@ -3628,7 +3705,11 @@ public:
         return res;
     }
     void backtrack(int n, int k, int start,vector<int> tempv){
-        if(tempv.size() == k) res.emplace_back(tempv);
+        if(tempv.size() == k) 
+        {
+            res.emplace_back(tempv);
+            return;
+        }
         for(int i =start; i<n;i++){
             tempv.push_back(i+1);
             backtrack(n,k,i+1,tempv);
@@ -4063,7 +4144,7 @@ int slidingPuzzle(vector<vector<int>>& board) {
             for (; cur[idx] != '0'; idx++);
             // 将数字 0 和相邻的数字交换位置
             for (int adj : neighbor[idx]) {
-                string new_board = cur;
+                string new_board = cur; // 使用一个新的表也是一个比较重要的策略
                 swap(new_board[adj], new_board[idx]);
                 // 防止走回头路
                 if (!visited.count(new_board)) {
@@ -4086,7 +4167,7 @@ int slidingPuzzle(vector<vector<int>>& board) {
 #### 快慢指针的用法和用途：
 
 1. 是否有环：相遇可以判定有环；
-2. 找到环的起始点：相遇后，把一个调到头，同速前进，再次相遇即是起始点。
+2. 找到环的起始点：相遇后，把一个调到头，同速前进，再次相遇即是起始点。（或者先停下一个，然后让另一个从头开始走）
 3. 链表的中点：快慢指针，快指针到达终点。
    延申问题：对链表进行归并排序，通过快慢指针实现二分的操作，合并两个有序链表。
 4. 起始点偏差：先让一个指针走k步，另一个指针再出发，寻找链表的倒数第k个元素
@@ -4287,7 +4368,7 @@ public:
 
 #### 典型例题：567字符串排列
 
-这题和上面一题的区别就在于“**只**包含需要的所有元素” ，并且计数一致
+这题和上面一题的区别就在于“**只**包含需要的所有元素” ，并且计数一致（因为是存在排列，所以中间不能有其他的元素）
 
 这题我的思路是直接不断移动right，然后当right遍历到不同的元素的时候，或者需要元素的count不同的时候，直接--，但是这样实际上还是有一定的问题的，比如对于windows中的元素--实际上并不好操作。但是这个思路的计算和遍历思路实际上比框架的快，也不一定，因为要遍历--；
 
@@ -4295,7 +4376,7 @@ FA：右侧递进实际上还是一样的，但是左侧应该是当size不同�
 
 **因为这里用的是小于等于的时候都要进入循环，所以第一次发生判断的时候只可能是长度相等的时候。**
 
-#### 典型例题：438所有的排列
+#### 典型例题：438所有的字母yiweici排列
 
 和上一题一样，只是要存储所有的start，所以判断的热res修改一下就好了。
 
@@ -4397,6 +4478,35 @@ public:
 
 实际上有类似的问题涉及到贪心的算法选择。
 
+下面这个是我的写法
+
+```cpp
+class Solution {
+public:
+    int removeCoveredIntervals(vector<vector<int>>& intervals) {
+        if (intervals.empty()) return 0;
+        // 按照第一维度的升序和第二个维度的降序来排列
+        sort(intervals.begin(), intervals.end(), [](vector<int>& a, vector<int>& b)
+            {
+                if (a[0] != b[0]) return a[0] < b[0];
+                else return a[1] > b[1];
+            });
+        int res = 1;
+        // 指定当前的边界
+        vector<int> cur = intervals[0];
+        for (int i = 1; i < intervals.size(); i++) {
+            // 当第二个维度比当前大的时候就更新
+            if (intervals[i][1] > cur[1]) {
+                res++; cur = intervals[i];
+            }
+        }
+        return res;
+    }
+};
+```
+
+FA中的傻逼写法？
+
 ```cpp
 int removeCoveredIntervals(int[][] intvs) {
     // 按照起点升序排列，起点相同时降序排列
@@ -4435,7 +4545,48 @@ int removeCoveredIntervals(int[][] intvs) {
 
 #### 典型题 56 区间合并
 
+和上一题是一样的
+
 实际上也是按照开始的节点升序排列，后面其实升序降序都可以，按照start和现有的end的关系，看到底是要修改end还是push_back。即可。
+
+我写的代码
+
+```cpp
+class Solution {
+public:
+    vector<vector<int>> merge(vector<vector<int>>& intervals) {
+        if (intervals.empty()) return {};
+        // 按照第一维度的升序和第二个维度的降序来排列
+        sort(intervals.begin(), intervals.end(), [](vector<int>& a, vector<int>& b)
+            {
+                if (a[0] != b[0]) return a[0] < b[0];
+                else return a[1] > b[1];
+            });
+        vector<vector<int>> res;
+        vector<int> temp = intervals[0];
+        // 考虑需要合并的情况分三种情况，覆盖（无需合并） 重叠 ， 更新
+        for (auto interval:intervals) {
+            //覆盖的可以直接掠过，通过尾部来进行重叠或者更新的判断；
+            if (interval[1] > temp[1]) {
+                // 判断是重叠的情况还是 更新的情况
+                if (interval[0] > temp[1]) {
+                    res.emplace_back(temp);
+                    temp = interval;
+                }
+                else 
+                {
+                    temp[1] = interval[1];
+                }
+            }
+        }
+        // 还剩下最后一个没有加入更新
+        res.emplace_back(temp);
+        return res;
+    }
+};
+```
+
+
 
 ```cpp
 # intervals 形如 [[1,3],[2,6]...]
@@ -4655,58 +4806,6 @@ for (int i = 0; i < n; i++)
 例题：koko吃香蕉；货物运输
 
 我对于二分查找的框架的写法实际上还是没有太清楚，到底是应该+1-1还是怎么去约束，我还是要想清楚再写，看看FA的二分查找框架。
-
-#### 删除数组中的重复元素316 1081
-
-这一题实际上还是用单调栈的思路，让里面的顺序尽量是按照从小到大排，就是增加了约束，也就是：
-
-- 里面已经有的我们就直接过；
-- 后面没有再出现的情况我们也直接过；
-- 如果是比里面的大就直接加进去，如果是比里面的小，我们就pop到直接过的时候再加
-- 需要两个辅助的存放判断的辅助情况
-
-```cpp
-class Solution {
-public:
-    string removeDuplicateLetters(string s) {
-        if(s.empty()) return {};
-        // 初始化需要的存储数据结构
-        vector<int> countAl(256,0); 
-        vector<bool> countSt(256,false);
-        stack<int> store;
-        // 初始化count数组
-        for(auto t: s){
-            countAl[t]++;
-        }
-        for(char c: s){
-            countAl[c]--;
-            if(countSt[c]) continue;
-            while(!store.empty() && store.top()>c){
-                // 如果top后面没有了
-                if(countAl[store.top()]==0)
-                    break;
-                // 如果还有就pop
-                countSt[store.top()] = false;
-                store.pop();
-            }
-            store.push(c);
-            countSt[c] = true;
-        }
-        // 对stack中的字符进行反转然后输出
-        string res;
-        stack<char> temp;
-        while(!store.empty()){
-            temp.push(store.top());
-            store.pop();
-        }
-        while(!temp.empty()){
-            res.push_back(temp.top());
-            temp.pop();
-        }
-        return res;
-    }
-};
-```
 
 
 
@@ -4949,7 +5048,7 @@ Push 需要判断是否超出了边界。
 **具体代码实现如下：**
 
 ```cpp
-
+// 这里的关键就在于带有额外头尾节点的双向链表，将删除，移动和乱七八糟的全部分离出来
 struct Dlist{
     int val, key;
     Dlist* prev;
@@ -5374,7 +5473,19 @@ val-> index -> nums[index] = -nums[index];
 #### 判断括号的合法性：
 
 1. 单种括号，我们只需要（++ ）--进行判断就可以了，最终==0
+
 2. 多种括号，需要增加存储的信息：使用STACK，遇到左括号就入栈，右括号就出栈，出栈的时候进行匹配。
+
+3. 如果带通配符的：双向进行查找，左到右的时候把\*当成++ 右到左的时候也把\*当成++,在遍历过程中只要小于0了就直接失效
+   这题实际上也可以使用DP，但是怎么做呢
+
+   > 状态转移：
+   >
+   > 算法：
+   > 如果且仅当间隔 s[i], s[i+1], ..., s[j] 能组成有效的括号时，dp[i][j]为 true。只有在下列情况下，dp[i][j] 才为 true：
+   >
+   > s[i] 是 '*' 号, 且在 s[i+1], s[i+2], ..., s[j] 这个范围能够组成有效的括号
+   > 或者，s[i] 为 '('，并且在 [i+1，j] 中有一些 k，使得 s[k] 为 ')'，且(s[i+1:k] 和 s[k+1:j+1])截断的两个间隔可以构成有效的括号；
 
 #### 判定子序列
 
